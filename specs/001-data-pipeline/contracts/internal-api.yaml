@@ -1,0 +1,477 @@
+openapi: 3.0.3
+info:
+  title: Data Pipeline Internal API
+  description: |
+    Internal API for the Data Collection Pipeline (Agent 1).
+    This API is used by Stage A (Discovery) to retrieve problem cards.
+
+    Note: The pipeline itself runs as a background scheduler, not an API server.
+    These endpoints will be exposed when the API Gateway is implemented.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+
+paths:
+  /documents/summaries:
+    get:
+      summary: List document summaries for problem cards
+      description: Returns paginated list of document summaries for Stage A UI
+      operationId: listDocumentSummaries
+      tags:
+        - Documents
+      parameters:
+        - name: domain
+          in: query
+          description: Filter by domain tag
+          schema:
+            type: string
+            example: real_estate
+        - name: keywords
+          in: query
+          description: Filter by keywords (comma-separated)
+          schema:
+            type: string
+            example: 전세,사기
+        - name: trend
+          in: query
+          description: Filter by trend
+          schema:
+            $ref: '#/components/schemas/Trend'
+        - name: sentiment
+          in: query
+          description: Filter by sentiment
+          schema:
+            $ref: '#/components/schemas/Sentiment'
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [recent, oldest]
+            default: recent
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSummaryList'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /documents/summaries/{id}:
+    get:
+      summary: Get single document summary
+      description: Returns a specific document summary by ID
+      operationId: getDocumentSummary
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Document UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSummary'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /documents/{id}/related:
+    get:
+      summary: Get related documents
+      description: Returns documents related to the specified document
+      operationId: getRelatedDocuments
+      tags:
+        - Documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Document UUID
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Maximum related documents to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 5
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatedDocumentList'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /documents/search:
+    post:
+      summary: Semantic search documents
+      description: Search documents using semantic similarity (RAG retrieval)
+      operationId: searchDocuments
+      tags:
+        - Documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResultList'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /jobs:
+    get:
+      summary: List collection jobs
+      description: Returns list of collection jobs for monitoring
+      operationId: listCollectionJobs
+      tags:
+        - Jobs
+      parameters:
+        - name: status
+          in: query
+          description: Filter by job status
+          schema:
+            $ref: '#/components/schemas/JobStatus'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionJobList'
+
+  /jobs/{id}:
+    get:
+      summary: Get collection job details
+      description: Returns details of a specific collection job
+      operationId: getCollectionJob
+      tags:
+        - Jobs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionJob'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      summary: Health check
+      description: Returns service health status
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  schemas:
+    Trend:
+      type: string
+      enum: [RISING, STABLE, DECLINING]
+
+    Sentiment:
+      type: string
+      enum: [POSITIVE, NEUTRAL, NEGATIVE]
+
+    JobStatus:
+      type: string
+      enum: [PENDING, RUNNING, COMPLETED, FAILED]
+
+    JobType:
+      type: string
+      enum: [INITIAL_LOAD, INCREMENTAL]
+
+    RelationshipType:
+      type: string
+      enum: [SIMILAR_TOPIC, SAME_DOMAIN, TREND_CORRELATION]
+
+    DocumentSummary:
+      type: object
+      required:
+        - id
+        - source_url
+        - title
+        - keywords
+        - domain_tag
+        - trend
+        - sentiment
+        - posted_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_url:
+          type: string
+          format: uri
+        title:
+          type: string
+          maxLength: 500
+        keywords:
+          type: array
+          items:
+            type: string
+          minItems: 3
+          maxItems: 10
+        domain_tag:
+          type: string
+        trend:
+          $ref: '#/components/schemas/Trend'
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+        posted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    DocumentSummaryList:
+      type: object
+      required:
+        - items
+        - total
+        - limit
+        - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    RelatedDocument:
+      type: object
+      required:
+        - document
+        - relationship_type
+        - similarity_score
+      properties:
+        document:
+          $ref: '#/components/schemas/DocumentSummary'
+        relationship_type:
+          $ref: '#/components/schemas/RelationshipType'
+        similarity_score:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    RelatedDocumentList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedDocument'
+
+    SearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 2
+          maxLength: 500
+        domain:
+          type: string
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 10
+
+    SearchResult:
+      type: object
+      required:
+        - document
+        - score
+      properties:
+        document:
+          $ref: '#/components/schemas/DocumentSummary'
+        score:
+          type: number
+          description: Similarity score (0-1)
+
+    SearchResultList:
+      type: object
+      required:
+        - items
+        - query
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        query:
+          type: string
+
+    CollectionJob:
+      type: object
+      required:
+        - id
+        - job_type
+        - status
+        - target_start
+        - target_end
+      properties:
+        id:
+          type: string
+          format: uuid
+        job_type:
+          $ref: '#/components/schemas/JobType'
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        target_start:
+          type: string
+          format: date-time
+        target_end:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        posts_collected:
+          type: integer
+        posts_processed:
+          type: integer
+        posts_filtered:
+          type: integer
+        error_message:
+          type: string
+
+    CollectionJobList:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CollectionJob'
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        components:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [up, down]
+            vector_db:
+              type: string
+              enum: [up, down]
+            scheduler:
+              type: string
+              enum: [running, stopped]
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
