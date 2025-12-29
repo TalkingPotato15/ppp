@@ -1,0 +1,49 @@
+[project]
+name = "agent-business-builder"
+version = "0.1.0"
+description = "AI Agent Business Builder - Data Collection Pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.12.0",
+    "httpx>=0.25.0",
+    "lxml>=4.9.0",
+    "openai>=1.0.0",
+    "chromadb>=0.4.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.19.0",
+    "alembic>=1.13.0",
+    "apscheduler>=3.10.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+agent-builder = "src.main:app"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

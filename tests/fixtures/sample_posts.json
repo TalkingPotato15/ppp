@@ -1,0 +1,110 @@
+{
+  "description": "Sample posts for testing cleaner.py - mix of noise and valid content",
+  "valid_posts": [
+    {
+      "id": "valid-001",
+      "source_url": "https://example-forum.com/post/12345",
+      "content": "서울 강남구 아파트 전세가가 계속 오르고 있습니다. 최근 3개월간 약 5% 상승했으며, 특히 대치동과 삼성동 지역의 상승폭이 큽니다. 전문가들은 학군 수요와 재건축 기대감이 원인이라고 분석하고 있습니다. 현재 30평대 아파트 기준 전세가는 평균 12억원 수준입니다.",
+      "author_hash": "abc123hash",
+      "posted_at": "2025-01-15T10:30:00Z",
+      "expected_result": {
+        "is_noise": false,
+        "trend": "RISING",
+        "sentiment": "NEUTRAL"
+      }
+    },
+    {
+      "id": "valid-002",
+      "source_url": "https://example-forum.com/post/12346",
+      "content": "경기도 용인시 수지구에서 신축 아파트 입주가 시작되었습니다. 분양가 대비 시세가 약간 낮아 마이너스 프리미엄이 발생하고 있어요. 실거주 목적이라면 지금이 좋은 타이밍일 수 있습니다. 다만 교통 인프라가 아직 부족한 편이라 출퇴근이 불편할 수 있습니다.",
+      "author_hash": "def456hash",
+      "posted_at": "2025-01-14T15:20:00Z",
+      "expected_result": {
+        "is_noise": false,
+        "trend": "DECLINING",
+        "sentiment": "NEUTRAL"
+      }
+    },
+    {
+      "id": "valid-003",
+      "source_url": "https://example-forum.com/post/12347",
+      "content": "청약 당첨되신 분들 축하드립니다! 저도 이번에 당첨되어서 너무 기쁩니다. 분양가상한제 적용 지역이라 시세 대비 저렴하게 분양받을 수 있었어요. 계약금 납부일이 다가오는데 설레네요. 입주는 2027년 예정입니다.",
+      "author_hash": "ghi789hash",
+      "posted_at": "2025-01-13T09:00:00Z",
+      "expected_result": {
+        "is_noise": false,
+        "trend": "STABLE",
+        "sentiment": "POSITIVE"
+      }
+    },
+    {
+      "id": "valid-004",
+      "source_url": "https://example-forum.com/post/12348",
+      "content": "금리 인상으로 인해 주택담보대출 이자 부담이 너무 큽니다. 변동금리로 대출받았는데 이자가 거의 두 배로 올랐어요. 고정금리로 갈아탈까 고민 중입니다. 비슷한 경험 있으신 분들 조언 부탁드립니다. 대출 원금이 5억인데 월 이자만 200만원이 넘어요.",
+      "author_hash": "jkl012hash",
+      "posted_at": "2025-01-12T18:45:00Z",
+      "expected_result": {
+        "is_noise": false,
+        "trend": "DECLINING",
+        "sentiment": "NEGATIVE"
+      }
+    }
+  ],
+  "noise_posts": [
+    {
+      "id": "noise-001",
+      "source_url": "https://example-forum.com/post/99901",
+      "content": "★★★ 급매물 ★★★ 강남역 5분거리 오피스텔 시세보다 2000만원 저렴! 지금 바로 연락주세요! 010-XXXX-XXXX 부동산 전문가가 최고의 매물을 소개해드립니다. 선착순 마감! 놓치지 마세요!",
+      "author_hash": "spam001hash",
+      "posted_at": "2025-01-15T11:00:00Z",
+      "expected_result": {
+        "is_noise": true,
+        "noise_reason": "advertisement"
+      }
+    },
+    {
+      "id": "noise-002",
+      "source_url": "https://example-forum.com/post/99902",
+      "content": "ㅋㅋㅋㅋㅋㅋㅋ",
+      "author_hash": "spam002hash",
+      "posted_at": "2025-01-15T11:30:00Z",
+      "expected_result": {
+        "is_noise": true,
+        "noise_reason": "too short or meaningless"
+      }
+    },
+    {
+      "id": "noise-003",
+      "source_url": "https://example-forum.com/post/99903",
+      "content": "오늘 점심 뭐 먹었어요? 저는 김치찌개 먹었는데 맛있더라고요. 근처에 맛집 추천해주세요! 혼밥하기 좋은 곳이면 더 좋아요.",
+      "author_hash": "spam003hash",
+      "posted_at": "2025-01-15T12:00:00Z",
+      "expected_result": {
+        "is_noise": true,
+        "noise_reason": "off-topic"
+      }
+    },
+    {
+      "id": "noise-004",
+      "source_url": "https://example-forum.com/post/99904",
+      "content": "무료 상담! 무료 상담! 무료 상담! 부동산 투자 무료 상담 받아보세요! 수익률 보장! 원금 보장! 지금 바로 신청하세요! 카카오톡 친구추가: @부동산천재",
+      "author_hash": "spam004hash",
+      "posted_at": "2025-01-15T12:30:00Z",
+      "expected_result": {
+        "is_noise": true,
+        "noise_reason": "spam"
+      }
+    },
+    {
+      "id": "noise-005",
+      "source_url": "https://example-forum.com/post/99905",
+      "content": "안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요안녕하세요",
+      "author_hash": "spam005hash",
+      "posted_at": "2025-01-15T13:00:00Z",
+      "expected_result": {
+        "is_noise": true,
+        "noise_reason": "repetitive content"
+      }
+    }
+  ]
+}
