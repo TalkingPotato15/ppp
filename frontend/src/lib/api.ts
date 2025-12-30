@@ -138,3 +138,12 @@ export const ideasApi = {
   checkSavedStatus: (ideaId: string) =>
     api.get(`/api/ideas/${ideaId}/saved-status`),
 };
+
+// Payment API
+export const paymentApi = {
+  recordFailure: (data: { order_id: string; code: string; message: string }) =>
+    api.post('/api/payment/fail', data),
+
+  getPaymentStatus: (orderId: string) =>
+    api.get(`/api/payment/status/${orderId}`),
+};

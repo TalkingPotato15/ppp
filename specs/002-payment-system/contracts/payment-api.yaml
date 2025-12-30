@@ -1,0 +1,387 @@
+openapi: 3.0.3
+info:
+  title: Payment System API
+  description: API for initiating and confirming payments via Toss Payments integration
+  version: 1.0.0
+  contact:
+    name: AI Agent Business Builder Team
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development server
+  - url: https://api.yourdomain.com/api
+    description: Production server
+
+tags:
+  - name: Payment
+    description: Payment flow endpoints
+
+paths:
+  /payment/initiate:
+    post:
+      tags:
+        - Payment
+      summary: Initiate a new payment
+      description: Creates a payment session and returns Toss Payments checkout URL
+      operationId: initiatePayment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitiatePaymentRequest'
+            example:
+              amount: 1990
+              order_name: "Stage C Technical Specs"
+      responses:
+        '200':
+          description: Payment initiation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitiatePaymentResponse'
+              example:
+                session_id: "550e8400-e29b-41d4-a716-446655440000"
+                order_id: "order-2025-001"
+                checkout_url: "https://api.tosspayments.com/v1/payments/checkout/tviva20240330142105JQNMA"
+                expires_at: "2025-12-30T11:30:00Z"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidAmount:
+                  value:
+                    error: "INVALID_AMOUNT"
+                    message: "Amount must be between ₩100 and ₩10,000,000"
+        '401':
+          description: Unauthorized - invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error or Toss API error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /payment/confirm:
+    post:
+      tags:
+        - Payment
+      summary: Confirm a payment after user returns from Toss
+      description: Validates and confirms payment with Toss Payments API
+      operationId: confirmPayment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPaymentRequest'
+            example:
+              payment_key: "tviva20240330142105JQNMA"
+              order_id: "order-2025-001"
+              amount: 1990
+      responses:
+        '200':
+          description: Payment confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmPaymentResponse'
+              example:
+                status: "SUCCESS"
+                order_id: "order-2025-001"
+                payment_key: "tviva20240330142105JQNMA"
+                amount: 1990
+                approved_at: "2025-12-30T10:05:00Z"
+                method: "카드"
+        '400':
+          description: Invalid confirmation request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                mismatch:
+                  value:
+                    error: "PAYMENT_MISMATCH"
+                    message: "Payment details do not match session"
+        '401':
+          description: Unauthorized - invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment session not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error or Toss confirmation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /payment/fail:
+    post:
+      tags:
+        - Payment
+      summary: Record payment failure
+      description: Updates payment session status when user is redirected to failure URL
+      operationId: recordPaymentFailure
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentFailureRequest'
+            example:
+              order_id: "order-2025-001"
+              error_code: "INSUFFICIENT_FUNDS"
+              error_message: "Insufficient funds in account"
+      responses:
+        '200':
+          description: Failure recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentFailureResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /payment/status/{order_id}:
+    get:
+      tags:
+        - Payment
+      summary: Get payment status
+      description: Retrieves current status of a payment session
+      operationId: getPaymentStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Order ID to query
+          example: "order-2025-001"
+      responses:
+        '200':
+          description: Payment status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusResponse'
+              example:
+                order_id: "order-2025-001"
+                status: "SUCCESS"
+                amount: 1990
+                order_name: "Stage C Technical Specs"
+                created_at: "2025-12-30T10:00:00Z"
+                approved_at: "2025-12-30T10:05:00Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /auth/login endpoint
+
+  schemas:
+    InitiatePaymentRequest:
+      type: object
+      required:
+        - amount
+        - order_name
+      properties:
+        amount:
+          type: integer
+          format: int32
+          description: Payment amount in KRW (₩1,990 = 1990)
+          minimum: 100
+          maximum: 10000000
+          example: 1990
+        order_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Description of the purchase
+          example: "Stage C Technical Specs"
+
+    InitiatePaymentResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Payment session identifier
+        order_id:
+          type: string
+          description: Order identifier
+        checkout_url:
+          type: string
+          format: uri
+          description: Toss Payments checkout URL to redirect user to
+        expires_at:
+          type: string
+          format: date-time
+          description: Session expiration time (30 minutes from creation)
+
+    ConfirmPaymentRequest:
+      type: object
+      required:
+        - payment_key
+        - order_id
+        - amount
+      properties:
+        payment_key:
+          type: string
+          description: Payment key from Toss redirect URL
+          example: "tviva20240330142105JQNMA"
+        order_id:
+          type: string
+          description: Order ID from Toss redirect URL
+          example: "order-2025-001"
+        amount:
+          type: integer
+          format: int32
+          description: Amount from Toss redirect URL
+          example: 1990
+
+    ConfirmPaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [SUCCESS, FAILED]
+          description: Payment confirmation result
+        order_id:
+          type: string
+          description: Order identifier
+        payment_key:
+          type: string
+          description: Toss payment key
+        amount:
+          type: integer
+          format: int32
+          description: Confirmed payment amount
+        approved_at:
+          type: string
+          format: date-time
+          description: Payment approval timestamp
+        method:
+          type: string
+          description: Payment method used (card, transfer, etc.)
+          example: "카드"
+
+    PaymentFailureRequest:
+      type: object
+      required:
+        - order_id
+      properties:
+        order_id:
+          type: string
+          description: Order ID from failure redirect
+        error_code:
+          type: string
+          description: Error code from Toss
+          example: "INSUFFICIENT_FUNDS"
+        error_message:
+          type: string
+          description: User-friendly error message
+          example: "Insufficient funds in account"
+
+    PaymentFailureResponse:
+      type: object
+      properties:
+        order_id:
+          type: string
+          description: Order identifier
+        status:
+          type: string
+          enum: [FAILED]
+          description: Payment status (always FAILED)
+        error_message:
+          type: string
+          description: Error message for user display
+
+    PaymentStatusResponse:
+      type: object
+      properties:
+        order_id:
+          type: string
+          description: Order identifier
+        status:
+          type: string
+          enum: [PENDING, IN_PROGRESS, CONFIRMING, SUCCESS, FAILED, EXPIRED, CANCELLED]
+          description: Current payment status
+        amount:
+          type: integer
+          format: int32
+          description: Payment amount
+        order_name:
+          type: string
+          description: Purchase description
+        created_at:
+          type: string
+          format: date-time
+          description: Payment initiation timestamp
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Payment approval timestamp (null if not approved)
+        error_message:
+          type: string
+          nullable: true
+          description: Error message if payment failed
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "INVALID_REQUEST"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid payment amount"

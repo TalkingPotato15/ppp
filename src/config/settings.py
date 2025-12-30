@@ -1,6 +1,11 @@
 """Application settings using Pydantic."""
 
+from zoneinfo import ZoneInfo
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 
 class Settings(BaseSettings):
@@ -69,5 +74,60 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    # Toss Payments
+    toss_payments_secret_key: str = ""
+    toss_payments_client_key: str = ""
+    toss_api_base_url: str = "https://api.tosspayments.com"
+
+    # Payment URLs
+    payment_success_url: str = "http://localhost:3000/payment/success"
+    payment_failure_url: str = "http://localhost:3000/payment/failure"
+
+    # Session Configuration
+    payment_session_timeout_minutes: int = 30
+
 
 settings = Settings()
+
+
+def validate_payment_settings() -> None:
+    """Validate payment-related environment variables on startup.
+
+    Raises:
+        ValueError: If required payment settings are missing or invalid
+    """
+    if not settings.toss_payments_secret_key:
+        raise ValueError(
+            "TOSS_PAYMENTS_SECRET_KEY is required. "
+            "Please set it in your .env file."
+        )
+
+    # Validate secret key format (should start with test_sk_ or live_sk_)
+    if not settings.toss_payments_secret_key.startswith(("test_sk_", "live_sk_")):
+        raise ValueError(
+            "TOSS_PAYMENTS_SECRET_KEY has invalid format. "
+            "It should start with 'test_sk_' or 'live_sk_'"
+        )
+
+    if not settings.payment_success_url:
+        raise ValueError(
+            "PAYMENT_SUCCESS_URL is required. "
+            "Please set it in your .env file."
+        )
+
+    if not settings.payment_failure_url:
+        raise ValueError(
+            "PAYMENT_FAILURE_URL is required. "
+            "Please set it in your .env file."
+        )
+
+    if settings.payment_session_timeout_minutes < 1:
+        raise ValueError(
+            "PAYMENT_SESSION_TIMEOUT_MINUTES must be at least 1 minute"
+        )
+
+    if settings.payment_session_timeout_minutes > 60:
+        raise ValueError(
+            "PAYMENT_SESSION_TIMEOUT_MINUTES should not exceed 60 minutes "
+            "for security reasons"
+        )
