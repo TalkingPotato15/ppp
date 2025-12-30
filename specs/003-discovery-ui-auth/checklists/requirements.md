@@ -37,3 +37,4 @@
 - Assumptions documented: single domain (real estate), Google-only social login for PoC
 - **Updated 2025-12-29**: Spec translated to English per user request
 - **Updated 2025-12-29**: Added responsive card loading behavior (infinite scroll on mobile, pagination on desktop) - see FR-006, FR-007, FR-008
+- **Updated 2025-12-30**: Merged detailed Google OAuth spec (originally in 001-google-oauth-auth) - Added User Stories 2a-2e, FR-014 through FR-029, SC-008 through SC-015, and AuthIdentity/PendingSignup entities
