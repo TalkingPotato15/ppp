@@ -260,8 +260,8 @@ async def initial_load(months: int = 3, max_posts: Optional[int] = None) -> Pipe
     """
     result = PipelineResult()
 
-    # Calculate date range (using KST timezone)
-    to_date = datetime.now(KST)
+    # Calculate date range (using KST timezone, but store as naive for DB compatibility)
+    to_date = datetime.now(KST).replace(tzinfo=None)
     from_date = to_date - timedelta(days=months * 30)
 
     logger.info(f"Starting initial load: {months} months ({from_date} to {to_date})")
@@ -347,8 +347,8 @@ async def incremental_collect(hours: int = 1) -> PipelineResult:
     """
     result = PipelineResult()
 
-    # Calculate date range (using KST timezone)
-    to_date = datetime.now(KST)
+    # Calculate date range (using KST timezone, but store as naive for DB compatibility)
+    to_date = datetime.now(KST).replace(tzinfo=None)
     from_date = to_date - timedelta(hours=hours)
 
     logger.info(f"Starting incremental collection: {hours} hours ({from_date} to {to_date})")
