@@ -14,6 +14,12 @@ from src.storage import Base
 from src.models.job import CollectionJob  # noqa: F401
 from src.models.raw_post import RawPost  # noqa: F401
 from src.models.summary import DocumentSummary  # noqa: F401
+from src.models.relationship import DocumentRelationship  # noqa: F401
+from src.models.user import User  # noqa: F401
+from src.models.refresh_token import RefreshToken  # noqa: F401
+from src.models.generation_session import GenerationSession  # noqa: F401
+from src.models.generated_idea import GeneratedIdea  # noqa: F401
+from src.models.saved_idea import SavedIdea  # noqa: F401
 
 # this is the Alembic Config object
 config = context.config

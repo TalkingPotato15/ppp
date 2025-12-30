@@ -401,6 +401,38 @@ def process_relationships(
     console.print(f"\n[bold green]Created {count} document relationships[/bold green]")
 
 
+@app.command("serve")
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind to"),
+    port: int = typer.Option(8000, "--port", "-p", help="Port to bind to"),
+    reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload for development"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """Start the Discovery API server.
+
+    This command starts the FastAPI server for the Discovery UI and
+    Authentication endpoints.
+    """
+    setup_logging(verbose)
+
+    console.print(f"\n[bold blue]Starting Discovery API Server[/bold blue]")
+    console.print(f"  Host: {host}")
+    console.print(f"  Port: {port}")
+    console.print(f"  Reload: {'enabled' if reload else 'disabled'}")
+    console.print()
+    console.print(f"  API docs: http://{host if host != '0.0.0.0' else 'localhost'}:{port}/docs")
+    console.print()
+
+    import uvicorn
+    uvicorn.run(
+        "src.api.app:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level="debug" if verbose else "info",
+    )
+
+
 def main() -> None:
     """Main entry point."""
     app()

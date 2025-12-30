@@ -87,12 +87,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Implement embedding generation in src/agents/analyst/embedder.py using OpenAI text-embedding-3-small
-- [ ] T027 [US4] Implement add_document() in src/storage/vector_store.py to store document with embedding
-- [ ] T028 [US4] Implement search_similar() in src/storage/vector_store.py for semantic search
-- [ ] T029 [US4] Implement get_document() in src/storage/vector_store.py to retrieve by ID
-- [ ] T030 [US4] Add metadata preservation (source_url, title, keywords, trend, sentiment, domain_tag)
-- [ ] T031 [US4] Add logging for vector store operations
+- [x] T026 [US4] Implement embedding generation in src/agents/analyst/embedder.py using OpenAI text-embedding-3-small
+- [x] T027 [US4] Implement add_document() in src/storage/vector_store.py to store document with embedding
+- [x] T028 [US4] Implement search_similar() in src/storage/vector_store.py for semantic search
+- [x] T029 [US4] Implement get_document() in src/storage/vector_store.py to retrieve by ID
+- [x] T030 [US4] Add metadata preservation (source_url, title, keywords, trend, sentiment, domain_tag)
+- [x] T031 [US4] Add logging for vector store operations
 
 **Checkpoint**: Can store ProcessedDocument with embedding and retrieve via semantic search with 90%+ precision
 
@@ -106,11 +106,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T032 [P] [US5] Implement save_summary() in src/storage/rdb_store.py
-- [ ] T033 [P] [US5] Implement get_summaries() in src/storage/rdb_store.py with filtering (domain, keywords, trend, sentiment)
-- [ ] T034 [US5] Implement get_summary_by_id() in src/storage/rdb_store.py
-- [ ] T035 [US5] Implement pagination (limit, offset) and sorting (recent, oldest) in get_summaries()
-- [ ] T036 [US5] Add logging for RDB operations
+- [x] T032 [P] [US5] Implement save_summary() in src/storage/rdb_store.py
+- [x] T033 [P] [US5] Implement get_summaries() in src/storage/rdb_store.py with filtering (domain, keywords, trend, sentiment)
+- [x] T034 [US5] Implement get_summary_by_id() in src/storage/rdb_store.py
+- [x] T035 [US5] Implement pagination (limit, offset) and sorting (recent, oldest) in get_summaries()
+- [x] T036 [US5] Add logging for RDB operations
 
 **Checkpoint**: Can store DocumentSummary and query with filters, pagination, sorting
 
@@ -126,19 +126,19 @@
 
 ### Implementation for User Story 1
 
-- [ ] T037 [US1] Implement forum scraper in src/agents/analyst/scraper.py with httpx async client
-- [ ] T038 [US1] Implement parse_post_list() in scraper.py using BeautifulSoup and CSS selectors
-- [ ] T039 [US1] Implement parse_post_detail() in scraper.py to extract content, author, timestamp
-- [ ] T040 [US1] Implement rate limiting (1 req/5sec) in scraper.py
-- [ ] T041 [US1] Implement URL-based deduplication check in src/services/dedup.py (check before scraping)
-- [ ] T042 [US1] Implement save_raw_post() in src/storage/rdb_store.py for temporary RawPost storage
-- [ ] T043 [US1] Create pipeline orchestrator in src/services/pipeline.py (scrape → clean → embed → store)
-- [ ] T044 [US1] Implement initial_load() function in pipeline.py with configurable time range
-- [ ] T045 [US1] Implement job tracking: create CollectionJob before start, update on completion/failure
-- [ ] T046 [US1] Implement error handling with retry (3x exponential backoff) in scraper.py
-- [ ] T047 [US1] Implement resume from last successful point on error
-- [ ] T048 [US1] Add CLI command `initial-load --months N` in src/main.py using Typer
-- [ ] T049 [US1] Add comprehensive logging for initial load progress
+- [x] T037 [US1] Implement forum scraper in src/agents/analyst/scraper.py with httpx async client
+- [x] T038 [US1] Implement parse_post_list() in scraper.py using BeautifulSoup and CSS selectors
+- [x] T039 [US1] Implement parse_post_detail() in scraper.py to extract content, author, timestamp
+- [x] T040 [US1] Implement rate limiting (1 req/5sec) in scraper.py
+- [x] T041 [US1] Implement URL-based deduplication check in src/services/dedup.py (check before scraping)
+- [x] T042 [US1] Implement save_raw_post() in src/storage/rdb_store.py for temporary RawPost storage
+- [x] T043 [US1] Create pipeline orchestrator in src/services/pipeline.py (scrape → clean → embed → store)
+- [x] T044 [US1] Implement initial_load() function in pipeline.py with configurable time range
+- [x] T045 [US1] Implement job tracking: create CollectionJob before start, update on completion/failure
+- [x] T046 [US1] Implement error handling with retry (3x exponential backoff) in scraper.py
+- [x] T047 [US1] Implement resume from last successful point on error
+- [x] T048 [US1] Add CLI command `initial-load --months N` in src/main.py using Typer
+- [x] T049 [US1] Add comprehensive logging for initial load progress
 
 **Checkpoint**: Can run `uv run python -m src.main initial-load --months 3` and populate baseline dataset
 
@@ -154,14 +154,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T050 [US2] Implement incremental_collect() in src/services/pipeline.py for 1-hour window
-- [ ] T051 [US2] Implement APScheduler setup in src/agents/analyst/scheduler.py with SQLite job store
-- [ ] T052 [US2] Configure hourly cron trigger in scheduler.py
-- [ ] T053 [US2] Implement gap detection in src/services/pipeline.py (find missed collection windows)
-- [ ] T054 [US2] Implement gap recovery: collect data for missed periods automatically
-- [ ] T055 [US2] Add CLI command `scheduler` in src/main.py to start daemon mode
-- [ ] T056 [US2] Add CLI command `incremental --hours N` for manual runs in src/main.py
-- [ ] T057 [US2] Add logging for scheduler events and incremental collection
+- [x] T050 [US2] Implement incremental_collect() in src/services/pipeline.py for 1-hour window
+- [x] T051 [US2] Implement APScheduler setup in src/agents/analyst/scheduler.py with SQLite job store
+- [x] T052 [US2] Configure hourly cron trigger in scheduler.py
+- [x] T053 [US2] Implement gap detection in src/services/pipeline.py (find missed collection windows)
+- [x] T054 [US2] Implement gap recovery: collect data for missed periods automatically
+- [x] T055 [US2] Add CLI command `scheduler` in src/main.py to start daemon mode
+- [x] T056 [US2] Add CLI command `incremental --hours N` for manual runs in src/main.py
+- [x] T057 [US2] Add logging for scheduler events and incremental collection
 
 **Checkpoint**: Can run `uv run python -m src.main scheduler` and collect data every hour automatically
 
@@ -177,14 +177,14 @@
 
 ### Implementation for User Story 6
 
-- [ ] T058 [US6] Create DocumentRelationship model in src/models/relationship.py per data-model.md
-- [ ] T059 [US6] Add migration for document_relationships table
-- [ ] T060 [US6] Implement find_similar_documents() in src/services/pipeline.py using vector similarity
-- [ ] T061 [US6] Implement save_relationships() in src/storage/rdb_store.py
-- [ ] T062 [US6] Implement get_related_documents() in src/storage/rdb_store.py
-- [ ] T063 [US6] Integrate relationship detection into pipeline.py after document storage
-- [ ] T064 [US6] Add similarity threshold configuration (default: 0.8)
-- [ ] T065 [US6] Add logging for relationship detection
+- [x] T058 [US6] Create DocumentRelationship model in src/models/relationship.py per data-model.md
+- [x] T059 [US6] Add migration for document_relationships table
+- [x] T060 [US6] Implement find_similar_documents() in src/services/pipeline.py using vector similarity
+- [x] T061 [US6] Implement save_relationships() in src/storage/rdb_store.py
+- [x] T062 [US6] Implement get_related_documents() in src/storage/rdb_store.py
+- [x] T063 [US6] Integrate relationship detection into pipeline.py after document storage
+- [x] T064 [US6] Add similarity threshold configuration (default: 0.8)
+- [x] T065 [US6] Add logging for relationship detection
 
 **Checkpoint**: Documents with similar topics automatically linked with similarity scores
 
@@ -194,15 +194,15 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T066 [P] Implement health check endpoint logic in src/services/health.py
-- [ ] T067 [P] Add CLI command `health` in src/main.py
-- [ ] T068 [P] Add CLI command `jobs list` and `jobs show <id>` in src/main.py
-- [ ] T069 [P] Add CLI command `jobs check-gaps` in src/main.py
-- [ ] T070 Create sample forum selector config for testing in src/config/selectors.py
-- [ ] T071 Add graceful shutdown handling for scheduler
-- [ ] T072 Add User-Agent rotation in scraper.py for rate limit mitigation
-- [ ] T073 Validate quickstart.md commands work end-to-end with uv
-- [ ] T074 Code cleanup and docstrings for public functions
+- [x] T066 [P] Implement health check endpoint logic in src/services/health.py
+- [x] T067 [P] Add CLI command `health` in src/main.py
+- [x] T068 [P] Add CLI command `jobs list` and `jobs show <id>` in src/main.py
+- [x] T069 [P] Add CLI command `jobs check-gaps` in src/main.py
+- [x] T070 Create sample forum selector config for testing in src/config/selectors.py
+- [x] T071 Add graceful shutdown handling for scheduler
+- [x] T072 Add User-Agent rotation in scraper.py for rate limit mitigation
+- [x] T073 Validate quickstart.md commands work end-to-end with uv
+- [x] T074 Code cleanup and docstrings for public functions
 
 ---
 

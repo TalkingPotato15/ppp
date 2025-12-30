@@ -44,5 +44,30 @@ class Settings(BaseSettings):
     similarity_threshold: float = 0.8  # Minimum similarity score for relationship
     max_similar_documents: int = 5  # Maximum similar documents to link
 
+    # JWT Authentication
+    jwt_secret_key: str = "change-me-in-production-use-openssl-rand-hex-32"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    refresh_token_expire_days_remember: int = 30
+
+    # Google OAuth
+    google_client_id: str = ""
+
+    # SMTP Email
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_use_tls: bool = True
+
+    # Frontend
+    frontend_url: str = "http://localhost:3000"
+
+    # API
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+
 
 settings = Settings()
