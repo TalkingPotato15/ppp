@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from src.models import Sentiment, Trend
@@ -11,6 +12,8 @@ from src.services.dedup import generate_content_hash
 from src.services.llm_service import classify_content
 
 logger = logging.getLogger(__name__)
+n# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 # Default domain tag for real estate forum
 DEFAULT_DOMAIN_TAG = "real_estate"
@@ -78,7 +81,7 @@ async def clean_post(raw_post: RawPost) -> Optional[ProcessedDocument]:
         sentiment=sentiment,
         content_hash=content_hash,
         posted_at=raw_post.posted_at,
-        processed_at=datetime.utcnow(),
+        processed_at=datetime.now(KST),
         collection_job_id=raw_post.collection_job_id,
     )
 

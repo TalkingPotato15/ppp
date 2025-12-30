@@ -7,6 +7,7 @@ import random
 from datetime import datetime
 from typing import Optional
 from urllib.parse import urljoin
+from zoneinfo import ZoneInfo
 
 import httpx
 from bs4 import BeautifulSoup
@@ -15,6 +16,9 @@ from src.config.selectors import ForumSelectors, get_selectors
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
+
+# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 # Rate limiting: 1 request per 5 seconds
 REQUEST_DELAY = 5.0
@@ -47,7 +51,7 @@ class ScrapedPost:
         self.author = author
         self.author_hash = self._hash_author(author) if author else None
         self.posted_at = posted_at
-        self.scraped_at = datetime.utcnow()
+        self.scraped_at = datetime.now(KST)
 
     @staticmethod
     def _hash_author(author: str) -> str:
@@ -211,7 +215,7 @@ class ForumScraper:
 
             # Extract date
             date_elem = soup.select_one(self.selectors["post_date"])
-            posted_at = self._parse_date(date_elem.get_text(strip=True)) if date_elem else datetime.utcnow()
+            posted_at = self._parse_date(date_elem.get_text(strip=True)) if date_elem else datetime.now(KST)
 
             return ScrapedPost(
                 source_url=url,
@@ -233,6 +237,14 @@ class ForumScraper:
         Returns:
             Parsed datetime, defaults to now if parsing fails.
         """
+        # Remove common Korean date prefixes
+        date_str = date_str.strip()
+        korean_prefixes = ["등록일", "작성일", "날짜"]
+        for prefix in korean_prefixes:
+            if date_str.startswith(prefix):
+                date_str = date_str[len(prefix):].strip()
+                break
+
         # Common Korean date formats
         formats = [
             "%Y-%m-%d %H:%M:%S",
@@ -252,7 +264,7 @@ class ForumScraper:
                 continue
 
         logger.warning(f"Could not parse date: {date_str}, using current time")
-        return datetime.utcnow()
+        return datetime.now(KST)
 
     def get_next_page_url(self, html: str, current_url: str) -> Optional[str]:
         """Get the next page URL from the current page.

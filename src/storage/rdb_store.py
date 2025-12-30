@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 from typing import Literal, Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +16,9 @@ from src.models.document import ProcessedDocument
 from src.models.relationship import DocumentRelationship
 
 logger = logging.getLogger(__name__)
+
+# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 
 # ============================================================================
@@ -41,7 +45,7 @@ async def save_summary(session: AsyncSession, document: ProcessedDocument) -> Do
         trend=document.trend if isinstance(document.trend, Trend) else Trend(document.trend),
         sentiment=document.sentiment if isinstance(document.sentiment, Sentiment) else Sentiment(document.sentiment),
         posted_at=document.posted_at,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(KST),
     )
 
     session.add(summary)
@@ -74,7 +78,7 @@ async def save_summaries(
             trend=doc.trend if isinstance(doc.trend, Trend) else Trend(doc.trend),
             sentiment=doc.sentiment if isinstance(doc.sentiment, Sentiment) else Sentiment(doc.sentiment),
             posted_at=doc.posted_at,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(KST),
         )
         summaries.append(summary)
         session.add(summary)
