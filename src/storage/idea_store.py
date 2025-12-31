@@ -94,6 +94,7 @@ async def add_ideas_to_session(
         ideas_data: List of idea dictionaries with fields:
             - title, description, target_audience, differentiators,
               market_opportunity, implementation_hints
+            - market_signals (optional), confidence_score (optional)
 
     Returns:
         List of created GeneratedIdea objects.
@@ -108,12 +109,36 @@ async def add_ideas_to_session(
             differentiators=data.get("differentiators", []),
             market_opportunity=data["market_opportunity"],
             implementation_hints=data["implementation_hints"],
+            market_signals=data.get("market_signals", []),
+            confidence_score=data.get("confidence_score"),
         )
         session.add(idea)
         ideas.append(idea)
 
     await session.flush()
     return ideas
+
+
+async def update_session_rag_context(
+    session: AsyncSession,
+    session_id: str,
+    rag_context: dict,
+) -> None:
+    """Update session with RAG context used for generation.
+
+    Args:
+        session: Database session.
+        session_id: GenerationSession UUID.
+        rag_context: RAG context dictionary to store.
+    """
+    result = await session.execute(
+        select(GenerationSession).where(GenerationSession.id == session_id)
+    )
+    gen_session = result.scalar_one_or_none()
+
+    if gen_session:
+        gen_session.rag_context = rag_context
+        await session.flush()
 
 
 async def get_session(
@@ -222,6 +247,118 @@ async def get_idea(session: AsyncSession, idea_id: str) -> Optional[GeneratedIde
         select(GeneratedIdea).where(GeneratedIdea.id == idea_id)
     )
     return result.scalar_one_or_none()
+
+
+async def get_idea_with_session(
+    session: AsyncSession, idea_id: str
+) -> Optional[GeneratedIdea]:
+    """Get a generated idea with its session loaded.
+
+    Args:
+        session: Database session.
+        idea_id: GeneratedIdea UUID.
+
+    Returns:
+        GeneratedIdea with session loaded, or None if not found.
+    """
+    result = await session.execute(
+        select(GeneratedIdea)
+        .options(selectinload(GeneratedIdea.session))
+        .where(GeneratedIdea.id == idea_id)
+    )
+    return result.scalar_one_or_none()
+
+
+# ============================================================================
+# Bookmark Operations
+# ============================================================================
+
+
+async def toggle_bookmark(
+    session: AsyncSession,
+    idea_id: str,
+    user_id: str,
+    is_bookmarked: bool,
+) -> Optional[GeneratedIdea]:
+    """Toggle bookmark status for an idea.
+
+    Args:
+        session: Database session.
+        idea_id: GeneratedIdea UUID.
+        user_id: User UUID (for ownership verification).
+        is_bookmarked: New bookmark status.
+
+    Returns:
+        Updated GeneratedIdea if found and owned by user, None otherwise.
+    """
+    # Get idea with session to verify ownership
+    result = await session.execute(
+        select(GeneratedIdea)
+        .options(selectinload(GeneratedIdea.session))
+        .where(GeneratedIdea.id == idea_id)
+    )
+    idea = result.scalar_one_or_none()
+
+    if not idea:
+        return None
+
+    # Verify user owns this idea (via session ownership)
+    if idea.session.user_id != user_id:
+        return None
+
+    idea.is_bookmarked = is_bookmarked
+    await session.flush()
+    return idea
+
+
+async def get_bookmarked_ideas(
+    session: AsyncSession,
+    user_id: str,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[GeneratedIdea], int]:
+    """Get user's bookmarked ideas with pagination.
+
+    Args:
+        session: Database session.
+        user_id: User UUID.
+        limit: Maximum number of ideas to return.
+        offset: Number of ideas to skip.
+
+    Returns:
+        Tuple of (list of GeneratedIdea objects with session, total count).
+    """
+    # Build subquery to get session IDs owned by user
+    user_sessions = (
+        select(GenerationSession.id)
+        .where(GenerationSession.user_id == user_id)
+        .subquery()
+    )
+
+    # Count bookmarked ideas
+    count_result = await session.execute(
+        select(func.count(GeneratedIdea.id)).where(
+            GeneratedIdea.session_id.in_(select(user_sessions)),
+            GeneratedIdea.is_bookmarked == True,  # noqa: E712
+        )
+    )
+    total = count_result.scalar_one()
+
+    # Get bookmarked ideas with session details
+    result = await session.execute(
+        select(GeneratedIdea)
+        .options(selectinload(GeneratedIdea.session))
+        .where(
+            GeneratedIdea.session_id.in_(select(user_sessions)),
+            GeneratedIdea.is_bookmarked == True,  # noqa: E712
+        )
+        .order_by(GeneratedIdea.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    ideas = list(result.scalars().all())
+
+    return ideas, total
 
 
 # ============================================================================

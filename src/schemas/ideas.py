@@ -26,6 +26,12 @@ class SaveIdeaRequest(BaseModel):
     )
 
 
+class BookmarkRequest(BaseModel):
+    """Request schema for bookmarking an idea."""
+
+    is_bookmarked: bool = Field(..., description="Whether to bookmark or unbookmark")
+
+
 # Response schemas
 class IdeaResponse(BaseModel):
     """Response schema for a single generated idea."""
@@ -37,6 +43,13 @@ class IdeaResponse(BaseModel):
     differentiators: list[str]
     market_opportunity: str
     implementation_hints: str
+    market_signals: Optional[list[str]] = Field(
+        None, description="References to market data from RAG context"
+    )
+    confidence_score: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="0.0-1.0 score based on data grounding"
+    )
+    is_bookmarked: bool = Field(default=False, description="Whether user has bookmarked this idea")
     created_at: datetime
 
     class Config:
@@ -53,6 +66,9 @@ class GenerationSessionResponse(BaseModel):
     status: GenerationStatus
     feedback: Optional[str]
     error_message: Optional[str]
+    rag_context: Optional[dict] = Field(
+        None, description="Retrieved documents used for generation (for debugging)"
+    )
     ideas: list[IdeaResponse]
     created_at: datetime
     completed_at: Optional[datetime]
@@ -100,3 +116,40 @@ class ProblemSummary(BaseModel):
     title: str
     keywords: list[str]
     domain_tag: str
+
+
+class BookmarkResponse(BaseModel):
+    """Response schema for bookmark operation."""
+
+    idea_id: str
+    is_bookmarked: bool
+
+
+class IdeaWithContextResponse(BaseModel):
+    """Response schema for an idea with problem context."""
+
+    id: str
+    title: str
+    description: str
+    target_audience: str
+    differentiators: list[str]
+    market_opportunity: str
+    implementation_hints: str
+    market_signals: Optional[list[str]] = None
+    confidence_score: Optional[float] = None
+    is_bookmarked: bool
+    created_at: datetime
+    problem_id: str
+    problem_title: str
+
+    class Config:
+        """Pydantic config."""
+
+        from_attributes = True
+
+
+class BookmarkedIdeasListResponse(BaseModel):
+    """Response schema for list of bookmarked ideas."""
+
+    items: list[IdeaWithContextResponse]
+    total: int

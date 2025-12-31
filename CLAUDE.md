@@ -3,6 +3,9 @@
 Auto-generated from all feature plans. Last updated: 2025-12-30
 
 ## Active Technologies
+- Python 3.11+ (backend), TypeScript/Next.js 14+ (frontend) + FastAPI, SQLAlchemy 2.0, httpx (backend); React 18, Axios, TailwindCSS (frontend) (004-stage-b-idea-generation)
+- SQLite with SQLAlchemy ORM (dev), PostgreSQL (production) (004-stage-b-idea-generation)
+- OpenAI GPT-4o-mini for AI Agent (idea generation), ChromaDB for RAG vector search (004-stage-b-idea-generation)
 
 - Python 3.11+ (backend), TypeScript/Next.js 14+ (frontend) + FastAPI (existing), httpx (existing), Toss Payments REST API (NEW); Next.js, React, Axios (frontend) (002-payment-system)
 
@@ -22,6 +25,7 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 Python 3.11+ (backend), TypeScript/Next.js 14+ (frontend): Follow standard conventions
 
 ## Recent Changes
+- 004-stage-b-idea-generation: Added Python 3.11+ (backend), TypeScript/Next.js 14+ (frontend) + FastAPI, SQLAlchemy 2.0, httpx (backend); React 18, Axios, TailwindCSS (frontend)
 
 - 002-payment-system: Added Python 3.11+ (backend), TypeScript/Next.js 14+ (frontend) + FastAPI (existing), httpx (existing), Toss Payments REST API (NEW); Next.js, React, Axios (frontend)
 

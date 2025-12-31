@@ -1,21 +1,36 @@
 """Stage B Ideas API endpoints."""
 
+import asyncio
+import logging
+
 from fastapi import APIRouter, HTTPException, status
+from openai import APIConnectionError, APITimeoutError, RateLimitError
 
 from src.api.dependencies import DbSession, CurrentUser
 from src.models import GenerationStatus
 from src.schemas.ideas import (
     GenerateIdeasRequest,
     SaveIdeaRequest,
+    BookmarkRequest,
     IdeaResponse,
     GenerationSessionResponse,
     GenerationSessionListResponse,
     SavedIdeaResponse,
     SavedIdeaListResponse,
+    BookmarkResponse,
+    IdeaWithContextResponse,
+    BookmarkedIdeasListResponse,
 )
 from src.storage import idea_store
 from src.services.ai_agent import ai_agent
+from src.services.rag_service import (
+    retrieve_similar_problems,
+    format_rag_context_for_prompt,
+    rag_context_to_dict,
+)
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -29,6 +44,7 @@ async def generate_ideas(
     """Generate business ideas for a problem.
 
     Creates a new generation session and uses the AI agent to generate ideas.
+    One-time generation: returns 409 Conflict if ideas already generated for this problem.
     """
     # Get the problem details
     problem = await idea_store.get_problem(session, request.problem_id)
@@ -36,6 +52,18 @@ async def generate_ideas(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Problem not found",
+        )
+
+    # Check for existing completed session (one-time generation enforcement)
+    existing_session = await idea_store.get_latest_session_for_problem(
+        session=session,
+        user_id=user.id,
+        problem_id=request.problem_id,
+    )
+    if existing_session and existing_session.status == GenerationStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ideas already generated for this problem. Generation is one-time only.",
         )
 
     # Create generation session
@@ -54,17 +82,36 @@ async def generate_ideas(
     )
 
     try:
-        # Generate ideas using AI agent
+        # Retrieve RAG context for grounding
+        logger.info(f"Retrieving RAG context for problem: {problem.title[:50]}...")
+        rag_context = await retrieve_similar_problems(
+            problem_title=problem.title,
+            keywords=problem.keywords,
+            domain_tag=problem.domain_tag,
+            top_k=5,
+        )
+
+        # Format RAG context for prompt
+        rag_prompt_context = format_rag_context_for_prompt(rag_context)
+
+        # Store RAG context in session for debugging
+        await idea_store.update_session_rag_context(
+            session=session,
+            session_id=gen_session.id,
+            rag_context=rag_context_to_dict(rag_context),
+        )
+
+        # Generate ideas using AI agent with RAG context
         ideas_data = await ai_agent.generate_ideas(
             problem_title=problem.title,
             keywords=problem.keywords or [],
             domain=problem.domain_tag or "general",
             trend=problem.trend.value if problem.trend else "STABLE",
             sentiment=problem.sentiment.value if problem.sentiment else "NEUTRAL",
-            feedback=request.feedback,
+            rag_context=rag_prompt_context,
         )
 
-        # Convert to dict format for storage
+        # Convert to dict format for storage (including new fields)
         ideas_dicts = [
             {
                 "title": idea.title,
@@ -73,6 +120,8 @@ async def generate_ideas(
                 "differentiators": idea.differentiators,
                 "market_opportunity": idea.market_opportunity,
                 "implementation_hints": idea.implementation_hints,
+                "market_signals": idea.market_signals,
+                "confidence_score": idea.confidence_score,
             }
             for idea in ideas_data
         ]
@@ -96,8 +145,57 @@ async def generate_ideas(
 
         return gen_session
 
+    except asyncio.TimeoutError as e:
+        logger.error(f"AI generation timeout: {e}")
+        await idea_store.update_session_status(
+            session=session,
+            session_id=gen_session.id,
+            status=GenerationStatus.FAILED,
+            error_message="Generation timed out. Please try again.",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Idea generation timed out. The AI service took too long to respond. Please try again.",
+        )
+    except APITimeoutError as e:
+        logger.error(f"OpenAI API timeout: {e}")
+        await idea_store.update_session_status(
+            session=session,
+            session_id=gen_session.id,
+            status=GenerationStatus.FAILED,
+            error_message="AI service timed out. Please try again.",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="The AI service timed out. Please try again in a moment.",
+        )
+    except (APIConnectionError, RateLimitError) as e:
+        logger.error(f"OpenAI API unavailable: {e}")
+        await idea_store.update_session_status(
+            session=session,
+            session_id=gen_session.id,
+            status=GenerationStatus.FAILED,
+            error_message="AI service temporarily unavailable.",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The AI service is temporarily unavailable. Please try again later.",
+        )
+    except ValueError as e:
+        # Invalid response from LLM (e.g., JSON parse error)
+        logger.error(f"Invalid AI response: {e}")
+        await idea_store.update_session_status(
+            session=session,
+            session_id=gen_session.id,
+            status=GenerationStatus.FAILED,
+            error_message="Invalid response from AI. Please try again.",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Received an invalid response from the AI service. Please try again.",
+        )
     except Exception as e:
-        # Update status to failed
+        logger.error(f"Failed to generate ideas: {e}")
         await idea_store.update_session_status(
             session=session,
             session_id=gen_session.id,
@@ -106,7 +204,7 @@ async def generate_ideas(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate ideas: {str(e)}",
+            detail="An unexpected error occurred while generating ideas. Please try again.",
         )
 
 
@@ -225,6 +323,9 @@ async def save_idea(
             differentiators=idea.differentiators,
             market_opportunity=idea.market_opportunity,
             implementation_hints=idea.implementation_hints,
+            market_signals=idea.market_signals,
+            confidence_score=idea.confidence_score,
+            is_bookmarked=idea.is_bookmarked,
             created_at=idea.created_at,
         ),
         problem_id=gen_session.problem_id,
@@ -289,6 +390,9 @@ async def list_saved_ideas(
                     differentiators=idea.differentiators,
                     market_opportunity=idea.market_opportunity,
                     implementation_hints=idea.implementation_hints,
+                    market_signals=idea.market_signals,
+                    confidence_score=idea.confidence_score,
+                    is_bookmarked=idea.is_bookmarked,
                     created_at=idea.created_at,
                 ),
                 problem_id=gen_session.problem_id,
@@ -318,3 +422,80 @@ async def check_saved_status(
         "is_saved": saved is not None,
         "saved_id": saved.id if saved else None,
     }
+
+
+# ============================================================================
+# Bookmark Endpoints
+# ============================================================================
+
+
+@router.patch("/{idea_id}/bookmark", response_model=BookmarkResponse)
+async def toggle_bookmark(
+    idea_id: str,
+    request: BookmarkRequest,
+    session: DbSession,
+    user: CurrentUser,
+):
+    """Toggle bookmark status for an idea.
+
+    User must own the idea (via session ownership).
+    """
+    idea = await idea_store.toggle_bookmark(
+        session=session,
+        idea_id=idea_id,
+        user_id=user.id,
+        is_bookmarked=request.is_bookmarked,
+    )
+
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Idea not found or access denied",
+        )
+
+    return BookmarkResponse(
+        idea_id=idea.id,
+        is_bookmarked=idea.is_bookmarked,
+    )
+
+
+@router.get("/bookmarked", response_model=BookmarkedIdeasListResponse)
+async def list_bookmarked_ideas(
+    session: DbSession,
+    user: CurrentUser,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """List user's bookmarked ideas with problem context."""
+    ideas, total = await idea_store.get_bookmarked_ideas(
+        session=session,
+        user_id=user.id,
+        limit=limit,
+        offset=offset,
+    )
+
+    # Build response with problem context
+    items = []
+    for idea in ideas:
+        gen_session = idea.session
+        problem = await idea_store.get_problem(session, gen_session.problem_id)
+
+        items.append(
+            IdeaWithContextResponse(
+                id=idea.id,
+                title=idea.title,
+                description=idea.description,
+                target_audience=idea.target_audience,
+                differentiators=idea.differentiators,
+                market_opportunity=idea.market_opportunity,
+                implementation_hints=idea.implementation_hints,
+                market_signals=idea.market_signals,
+                confidence_score=idea.confidence_score,
+                is_bookmarked=idea.is_bookmarked,
+                created_at=idea.created_at,
+                problem_id=gen_session.problem_id,
+                problem_title=problem.title if problem else "Unknown Problem",
+            )
+        )
+
+    return BookmarkedIdeasListResponse(items=items, total=total)

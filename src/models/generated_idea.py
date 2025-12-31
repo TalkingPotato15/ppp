@@ -1,10 +1,10 @@
 """GeneratedIdea model for AI-generated business ideas."""
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,6 +36,16 @@ class GeneratedIdea(Base):
     )  # List of key differentiators
     market_opportunity: Mapped[str] = mapped_column(Text, nullable=False)
     implementation_hints: Mapped[str] = mapped_column(Text, nullable=False)
+    # New fields for RAG and bookmarking
+    market_signals: Mapped[Optional[list]] = mapped_column(
+        JSON, nullable=True, default=list
+    )  # References to market data from RAG context
+    confidence_score: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, default=None
+    )  # 0.0-1.0 score based on how well idea is grounded in data
+    is_bookmarked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )  # Whether user has bookmarked this idea
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )

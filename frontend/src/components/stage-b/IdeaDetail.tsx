@@ -97,6 +97,75 @@ export function IdeaDetail({
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Confidence Score */}
+          {idea.confidence_score !== null && (
+            <section className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-700">
+                  Data Confidence Score
+                </h3>
+                <span
+                  className={`text-lg font-bold ${
+                    idea.confidence_score >= 0.7
+                      ? 'text-green-600'
+                      : idea.confidence_score >= 0.4
+                      ? 'text-yellow-600'
+                      : 'text-red-500'
+                  }`}
+                >
+                  {Math.round(idea.confidence_score * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${
+                    idea.confidence_score >= 0.7
+                      ? 'bg-green-500'
+                      : idea.confidence_score >= 0.4
+                      ? 'bg-yellow-500'
+                      : 'bg-red-400'
+                  }`}
+                  style={{ width: `${idea.confidence_score * 100}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Based on how well this idea is grounded in market data
+              </p>
+            </section>
+          )}
+
+          {/* Market Signals */}
+          {idea.market_signals && idea.market_signals.length > 0 && (
+            <section>
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Market Signals
+              </h3>
+              <ul className="space-y-2">
+                {idea.market_signals.map((signal, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3"
+                  >
+                    <svg
+                      className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                      />
+                    </svg>
+                    <span className="text-gray-700 text-sm">{signal}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section>
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
               Description

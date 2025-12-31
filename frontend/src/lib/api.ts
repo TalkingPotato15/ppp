@@ -114,8 +114,8 @@ export const discoveryApi = {
 
 // Ideas API (Stage B)
 export const ideasApi = {
-  generate: (problemId: string, feedback?: string) =>
-    api.post('/api/ideas/generate', { problem_id: problemId, feedback }),
+  generate: (problemId: string) =>
+    api.post('/api/ideas/generate', { problem_id: problemId }),
 
   getSessions: (params?: { limit?: number; offset?: number }) =>
     api.get('/api/ideas/sessions', { params }),
@@ -137,6 +137,12 @@ export const ideasApi = {
 
   checkSavedStatus: (ideaId: string) =>
     api.get(`/api/ideas/${ideaId}/saved-status`),
+
+  toggleBookmark: (ideaId: string, isBookmarked: boolean) =>
+    api.patch(`/api/ideas/${ideaId}/bookmark`, { is_bookmarked: isBookmarked }),
+
+  getBookmarkedIdeas: (params?: { limit?: number; offset?: number }) =>
+    api.get('/api/ideas/bookmarked', { params }),
 };
 
 // Payment API

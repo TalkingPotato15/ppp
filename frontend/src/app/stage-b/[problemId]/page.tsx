@@ -12,7 +12,7 @@ import {
   IdeaCard,
   IdeaDetail,
   GenerateButton,
-  FeedbackInput,
+  ErrorState,
 } from '@/components/stage-b';
 
 export default function StageBPage() {
@@ -22,8 +22,9 @@ export default function StageBPage() {
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
   const [isProblemLoading, setIsProblemLoading] = useState(true);
-  const [feedback, setFeedback] = useState('');
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
+  const [errorCode, setErrorCode] = useState<number | undefined>(undefined);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const {
     session,
@@ -35,6 +36,7 @@ export default function StageBPage() {
     generateIdeas,
     saveIdea,
     unsaveIdea,
+    toggleBookmark,
   } = useIdeas({ problemId });
 
   useEffect(() => {
@@ -61,11 +63,27 @@ export default function StageBPage() {
   }, [problemId, isAuthenticated]);
 
   const handleGenerate = async () => {
+    setErrorCode(undefined);
     try {
-      await generateIdeas(feedback || undefined);
-      setFeedback('');
+      await generateIdeas();
     } catch (err) {
       console.error('Failed to generate ideas:', err);
+      // Extract error code from axios error response
+      if (err && typeof err === 'object' && 'response' in err) {
+        const response = (err as { response?: { status?: number } }).response;
+        if (response?.status) {
+          setErrorCode(response.status);
+        }
+      }
+    }
+  };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await handleGenerate();
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -80,6 +98,10 @@ export default function StageBPage() {
     if (ideaId) {
       await unsaveIdea(savedId, ideaId);
     }
+  };
+
+  const handleBookmark = async (ideaId: string, isBookmarked: boolean) => {
+    await toggleBookmark(ideaId, isBookmarked);
   };
 
   if (authLoading || !isAuthenticated) {
@@ -152,62 +174,103 @@ export default function StageBPage() {
           )}
         </div>
 
-        {/* Generation Controls */}
+        {/* Generation Controls - One-time generation only */}
         <div className="space-y-4 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <GenerateButton
-              status={status}
-              hasExistingIdeas={hasExistingIdeas}
-              onClick={handleGenerate}
-              disabled={isGenerating || isIdeasLoading}
-            />
-            {hasExistingIdeas && (
+          {hasExistingIdeas ? (
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg border border-green-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-medium">Ideas Generated</span>
+              </div>
               <span className="text-sm text-gray-500">
                 {ideas.length} ideas generated
               </span>
-            )}
-          </div>
-
-          {hasExistingIdeas && (
-            <FeedbackInput
-              value={feedback}
-              onChange={setFeedback}
-              disabled={isGenerating}
+            </div>
+          ) : (
+            <GenerateButton
+              status={status}
+              hasExistingIdeas={false}
+              onClick={handleGenerate}
+              disabled={isGenerating || isIdeasLoading}
             />
           )}
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>{error}</span>
-            </div>
+          <div className="mb-6">
+            <ErrorState
+              message={error}
+              errorCode={errorCode}
+              onRetry={errorCode !== 409 ? handleRetry : undefined}
+              isRetrying={isRetrying}
+            />
           </div>
         )}
 
-        {/* Loading State */}
-        {(isGenerating || isIdeasLoading) && !hasExistingIdeas && (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto mb-4" />
-            <p className="text-gray-600">
-              {isGenerating
-                ? 'Generating ideas... This may take a few seconds.'
-                : 'Loading...'}
-            </p>
+        {/* Loading State - Checking existing session */}
+        {isIdeasLoading && !isGenerating && !hasExistingIdeas && (
+          <div className="space-y-4">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-6 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="text-center text-gray-500 text-sm">Loading your ideas...</p>
+          </div>
+        )}
+
+        {/* Generation Progress State */}
+        {isGenerating && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-8">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                <svg className="w-8 h-8 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Generating Your Ideas
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Our AI is analyzing market data and creating tailored business ideas...
+              </p>
+              <div className="max-w-sm mx-auto">
+                <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
+                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Analyzing problem context</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
+                  <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>Retrieving related market data</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-blue-600 animate-pulse">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Generating business ideas...</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-4">
+                This may take 10-30 seconds
+              </p>
+            </div>
           </div>
         )}
 
@@ -252,6 +315,7 @@ export default function StageBPage() {
                   savedStatus={savedStatuses[idea.id]}
                   onSave={handleSave}
                   onUnsave={handleUnsave}
+                  onBookmark={handleBookmark}
                   onExpand={setSelectedIdea}
                 />
               ))}

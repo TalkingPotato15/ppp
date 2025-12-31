@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Index, String, Text
+from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.storage import Base
@@ -47,6 +48,9 @@ class GenerationSession(Base):
     error_message: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # Error details if failed
+    rag_context: Mapped[Optional[dict]] = mapped_column(
+        JSON, nullable=True, default=None
+    )  # Retrieved documents used for generation (for debugging)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
