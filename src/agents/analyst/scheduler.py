@@ -5,6 +5,7 @@ import logging
 import signal
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -14,6 +15,8 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from src.config.settings import settings
 
 logger = logging.getLogger(__name__)
+n# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 # Global scheduler instance
 _scheduler: Optional[AsyncIOScheduler] = None
@@ -55,7 +58,7 @@ async def _run_incremental_job() -> None:
     """Job function for incremental collection."""
     from src.services.pipeline import incremental_collect
 
-    logger.info(f"[Scheduler] Starting incremental collection at {datetime.utcnow()}")
+    logger.info(f"[Scheduler] Starting incremental collection at {datetime.now(KST)}")
 
     try:
         result = await incremental_collect(hours=1)
@@ -76,7 +79,7 @@ async def _run_gap_recovery_job() -> None:
     """Job function for gap recovery (runs less frequently)."""
     from src.services.pipeline import recover_gaps
 
-    logger.info(f"[Scheduler] Starting gap recovery check at {datetime.utcnow()}")
+    logger.info(f"[Scheduler] Starting gap recovery check at {datetime.now(KST)}")
 
     try:
         results = await recover_gaps()

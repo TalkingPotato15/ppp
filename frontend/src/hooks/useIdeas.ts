@@ -18,11 +18,14 @@ interface UseIdeasResult {
   isLoading: boolean;
   isGenerating: boolean;
   error: string | null;
+  hasGeneratedIdeas: boolean;
   savedStatuses: Record<string, SavedStatus>;
-  generateIdeas: (feedback?: string) => Promise<void>;
+  generateIdeas: () => Promise<void>;
   saveIdea: (ideaId: string) => Promise<void>;
   unsaveIdea: (savedId: string, ideaId: string) => Promise<void>;
+  toggleBookmark: (ideaId: string, isBookmarked: boolean) => Promise<void>;
   refetchSavedStatuses: () => Promise<void>;
+  checkExistingSession: () => Promise<GenerationSession | null>;
 }
 
 export function useIdeas({ problemId }: UseIdeasOptions): UseIdeasResult {
@@ -76,30 +79,46 @@ export function useIdeas({ problemId }: UseIdeasOptions): UseIdeasResult {
     init();
   }, [problemId, fetchLatestSession, fetchSavedStatuses]);
 
-  const generateIdeas = useCallback(
-    async (feedback?: string) => {
-      setIsGenerating(true);
-      setError(null);
+  const generateIdeas = useCallback(async () => {
+    setIsGenerating(true);
+    setError(null);
 
-      try {
-        const response = await ideasApi.generate(problemId, feedback);
-        const newSession = response.data as GenerationSession;
-        setSession(newSession);
+    try {
+      const response = await ideasApi.generate(problemId);
+      const newSession = response.data as GenerationSession;
+      setSession(newSession);
 
-        if (newSession.ideas && newSession.ideas.length > 0) {
-          await fetchSavedStatuses(newSession.ideas);
-        }
-      } catch (err) {
+      if (newSession.ideas && newSession.ideas.length > 0) {
+        await fetchSavedStatuses(newSession.ideas);
+      }
+    } catch (err: unknown) {
+      // Handle 409 Conflict - ideas already generated
+      if (
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        (err as { response?: { status?: number } }).response?.status === 409
+      ) {
+        setError('Ideas have already been generated for this problem.');
+        // Fetch existing session
+        await fetchLatestSession();
+      } else {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to generate ideas';
         setError(errorMessage);
-        throw err;
-      } finally {
-        setIsGenerating(false);
       }
-    },
-    [problemId, fetchSavedStatuses]
-  );
+      throw err;
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [problemId, fetchSavedStatuses, fetchLatestSession]);
+
+  const checkExistingSession = useCallback(async () => {
+    return await fetchLatestSession();
+  }, [fetchLatestSession]);
+
+  const hasGeneratedIdeas =
+    session?.status === 'COMPLETED' && (session?.ideas?.length ?? 0) > 0;
 
   const saveIdea = useCallback(async (ideaId: string) => {
     try {
@@ -132,6 +151,30 @@ export function useIdeas({ problemId }: UseIdeasOptions): UseIdeasResult {
     }
   }, []);
 
+  const toggleBookmark = useCallback(
+    async (ideaId: string, isBookmarked: boolean) => {
+      try {
+        await ideasApi.toggleBookmark(ideaId, isBookmarked);
+        // Update local session state
+        setSession((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            ideas: prev.ideas.map((idea) =>
+              idea.id === ideaId ? { ...idea, is_bookmarked: isBookmarked } : idea
+            ),
+          };
+        });
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to toggle bookmark';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    []
+  );
+
   const refetchSavedStatuses = useCallback(async () => {
     if (session?.ideas && session.ideas.length > 0) {
       await fetchSavedStatuses(session.ideas);
@@ -144,10 +187,13 @@ export function useIdeas({ problemId }: UseIdeasOptions): UseIdeasResult {
     isLoading,
     isGenerating,
     error,
+    hasGeneratedIdeas,
     savedStatuses,
     generateIdeas,
     saveIdea,
     unsaveIdea,
+    toggleBookmark,
     refetchSavedStatuses,
+    checkExistingSession,
   };
 }

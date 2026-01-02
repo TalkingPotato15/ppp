@@ -1,19 +1,18 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: N/A → 1.0.0 (initial creation)
-Modified principles: N/A (new constitution)
+Version change: 1.0.0 → 1.1.0 (minor update)
+Modified principles: N/A
 Added sections:
-  - Core Principles (5 principles)
-  - Technical Standards
-  - Quality Gates
-  - Governance
+  - Development Workflow (Git Branching Strategy, Test Data Policy)
 Removed sections: N/A
 Templates requiring updates:
   - .specify/templates/plan-template.md ✅ (no updates required - compatible)
   - .specify/templates/spec-template.md ✅ (no updates required - compatible)
   - .specify/templates/tasks-template.md ✅ (no updates required - compatible)
-Follow-up TODOs: None
+Follow-up TODOs:
+  - Set up branch protection rules on GitHub for `main` and `dev`
+  - Update team workflow documentation to reflect new branching strategy
 -->
 
 # AI Agent Business Builder Constitution
@@ -148,4 +147,58 @@ The user journey MUST progress through free discovery to paid conversion with cl
 - Agent modifications MUST pass defined testing standards
 - Architecture changes MUST respect Budget-Aware Design constraints
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2025-12-28
+## Development Workflow
+
+### Git Branching Strategy
+
+The project follows a three-tier branching model for parallel development and production stability.
+
+**Branch Hierarchy**:
+```
+main (production)
+  ↑
+dev (development)
+  ↑
+feature/* (feature branches)
+```
+
+**Branch Rules**:
+
+1. **`main` Branch**:
+   - Production-ready code ONLY
+   - NO test data, mock data, or development fixtures
+   - NO direct commits allowed
+   - Only accepts merges from `dev` after thorough testing
+   - Protected branch with required reviews
+
+2. **`dev` Branch**:
+   - Integration branch for all features
+   - MAY contain test data and mock fixtures for development
+   - Accepts merges from feature branches
+   - Must pass all CI/CD tests before merging to `main`
+   - Used for staging and integration testing
+
+3. **Feature Branches** (`001-*`, `002-*`, etc.):
+   - Branched from `dev`
+   - Named with feature number prefix (e.g., `001-data-pipeline`, `002-payment-system`)
+   - Merged back to `dev` via Pull Request
+   - NEVER merge directly to `main`
+   - Deleted after successful merge to `dev`
+
+**Workflow**:
+1. Create feature branch from `dev`: `git checkout -b 001-feature-name dev`
+2. Develop and commit changes on feature branch
+3. Create Pull Request to merge feature → `dev`
+4. After review and approval, merge to `dev`
+5. When `dev` is stable and tested, create PR to merge `dev` → `main`
+6. Deploy `main` to production
+
+**Test Data Policy**:
+- Test/mock data: `tests/fixtures/`, `tests/test_*.py`, mock database seeds
+- Development-only: Allowed in `dev` and feature branches
+- Production (`main`): MUST NOT include any test/mock data
+- Use `.gitignore` patterns to exclude runtime test data (e.g., `data/*.db`, `data/chroma/`)
+
+**Rationale**: This strategy enables parallel development by multiple contributors while maintaining production stability and clean separation of test vs. production code.
+
+**Version**: 1.1.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2025-12-30

@@ -27,7 +27,19 @@ SELECTORS: dict[str, ForumSelectors] = {
         "post_url": "a.post-link",
         "next_page": "a.next-page",
     },
-    # Add more forums as needed
+    # Ppomppu (뽐뿌) - Korean forum (verified 2025-12-30)
+    "ppomppu_real_estate": {
+        # List page selectors
+        "post_list": "table tr",  # Each row is a post
+        "post_title": "a[href*='view.php']",  # Title from list (reused for detail)
+        "post_url": "a[href*='view.php?id=house']",  # Link to post detail
+        "next_page": "a[href*='&page=']",  # Pagination links
+
+        # Detail page selectors
+        "post_content": "td.board-contents",  # Main content body
+        "post_author": "a.baseList-name",  # Author name
+        "post_date": ".topTitle-mainbox li:nth-child(2)",  # Date/time (2nd li element)
+    },
 }
 
 

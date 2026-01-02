@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from src.agents.analyst.cleaner import clean_posts
 from src.agents.analyst.embedder import generate_embedding, generate_embeddings
@@ -19,6 +20,9 @@ from src.storage import rdb_store
 from src.storage import vector_store
 
 logger = logging.getLogger(__name__)
+
+# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 
 class PipelineResult:
@@ -213,10 +217,10 @@ async def _update_job_status(
         job.posts_filtered = posts_filtered
 
         if status == JobStatus.RUNNING and job.started_at is None:
-            job.started_at = datetime.utcnow()
+            job.started_at = datetime.now(KST)
 
         if status in (JobStatus.COMPLETED, JobStatus.FAILED):
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(KST)
 
         if error_message:
             job.error_message = error_message
@@ -256,8 +260,8 @@ async def initial_load(months: int = 3, max_posts: Optional[int] = None) -> Pipe
     """
     result = PipelineResult()
 
-    # Calculate date range
-    to_date = datetime.utcnow()
+    # Calculate date range (using KST timezone, but store as naive for DB compatibility)
+    to_date = datetime.now(KST).replace(tzinfo=None)
     from_date = to_date - timedelta(days=months * 30)
 
     logger.info(f"Starting initial load: {months} months ({from_date} to {to_date})")
@@ -274,7 +278,7 @@ async def initial_load(months: int = 3, max_posts: Optional[int] = None) -> Pipe
         skip_urls = await _get_existing_urls()
 
         # Phase 1: Scrape
-        scraper = ForumScraper()
+        scraper = ForumScraper(forum_name=settings.target_forum_name)
         try:
             scraped_posts = await _scrape_phase(
                 scraper, from_date, to_date, skip_urls, max_posts
@@ -343,8 +347,8 @@ async def incremental_collect(hours: int = 1) -> PipelineResult:
     """
     result = PipelineResult()
 
-    # Calculate date range
-    to_date = datetime.utcnow()
+    # Calculate date range (using KST timezone, but store as naive for DB compatibility)
+    to_date = datetime.now(KST).replace(tzinfo=None)
     from_date = to_date - timedelta(hours=hours)
 
     logger.info(f"Starting incremental collection: {hours} hours ({from_date} to {to_date})")
@@ -360,7 +364,7 @@ async def incremental_collect(hours: int = 1) -> PipelineResult:
         skip_urls = await _get_existing_urls()
 
         # Phase 1: Scrape
-        scraper = ForumScraper()
+        scraper = ForumScraper(forum_name=settings.target_forum_name)
         try:
             scraped_posts = await _scrape_phase(scraper, from_date, to_date, skip_urls)
             result.posts_collected = len(scraped_posts)

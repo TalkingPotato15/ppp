@@ -12,6 +12,9 @@ export interface Idea {
   differentiators: string[];
   market_opportunity: string;
   implementation_hints: string;
+  market_signals: string[] | null;
+  confidence_score: number | null;
+  is_bookmarked: boolean;
   created_at: string;
 }
 
@@ -21,6 +24,7 @@ export interface GenerationSession {
   status: GenerationStatus;
   feedback: string | null;
   error_message: string | null;
+  rag_context: Record<string, unknown> | null;
   ideas: Idea[];
   created_at: string;
   completed_at: string | null;
@@ -48,4 +52,23 @@ export interface SavedIdeaList {
 export interface SavedStatus {
   is_saved: boolean;
   saved_id: string | null;
+}
+
+export interface BookmarkRequest {
+  is_bookmarked: boolean;
+}
+
+export interface BookmarkResponse {
+  idea_id: string;
+  is_bookmarked: boolean;
+}
+
+export interface IdeaWithContext extends Idea {
+  problem_id: string;
+  problem_title: string;
+}
+
+export interface BookmarkedIdeasList {
+  items: IdeaWithContext[];
+  total: number;
 }

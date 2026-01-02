@@ -3,6 +3,7 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from src.config.settings import settings
@@ -12,6 +13,9 @@ from src.storage import rdb_store
 from src.storage import vector_store
 
 logger = logging.getLogger(__name__)
+
+# Timezone for Korea
+KST = ZoneInfo("Asia/Seoul")
 
 
 @dataclass
@@ -97,7 +101,8 @@ async def check_recent_collection_health() -> HealthStatus:
             )
 
         # Check if there's a recent successful job
-        recent_threshold = datetime.utcnow() - timedelta(hours=2)
+        # Use naive datetime for comparison with database timestamps
+        recent_threshold = datetime.now(KST).replace(tzinfo=None) - timedelta(hours=2)
         recent_jobs = [
             j for j in jobs
             if j.completed_at and j.completed_at > recent_threshold
@@ -164,5 +169,5 @@ async def get_system_health() -> SystemHealth:
         database=db_health,
         vector_store=vs_health,
         recent_collection=collection_health,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(KST).replace(tzinfo=None),
     )

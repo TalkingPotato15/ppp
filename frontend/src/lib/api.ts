@@ -1,12 +1,98 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import type { User, AuthResponse } from '@/types/auth';
+import type {
+  PaymentStatusResponse,
+  PaymentConfirmResponse,
+  PaymentFailureResponse,
+} from '@/types/payment';
+
+// ============================================
+// Types
+// ============================================
+
+export type { User, AuthResponse } from '@/types/auth';
+export type {
+  PaymentStatusResponse,
+  PaymentConfirmResponse,
+  PaymentFailureResponse,
+} from '@/types/payment';
+
+export interface Problem {
+  id: string;
+  source_url: string;
+  title: string;
+  keywords: string[];
+  domain_tag: string;
+  trend: 'RISING' | 'STABLE' | 'DECLINING';
+  sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+  posted_at: string;
+  created_at: string;
+}
+
+export interface ProblemListResponse {
+  items: Problem[];
+  total: number;
+  has_more: boolean;
+  limit: number;
+  offset: number;
+}
+
+export interface Idea {
+  id: string;
+  title: string;
+  description: string;
+  target_audience: string;
+  differentiators: string[];
+  market_opportunity: string;
+  implementation_hints: string;
+  market_signals: string[];
+  confidence_score: number | null;
+  is_bookmarked: boolean;
+  created_at: string;
+}
+
+export interface GenerationSession {
+  id: string;
+  user_id: string;
+  problem_id: string;
+  status: 'PENDING' | 'GENERATING' | 'COMPLETED' | 'FAILED';
+  feedback: string | null;
+  error_message: string | null;
+  rag_context: Record<string, unknown> | null;
+  created_at: string;
+  completed_at: string | null;
+  ideas: Idea[];
+}
+
+export interface SavedIdea {
+  id: string;
+  idea: Idea;
+  problem_id: string;
+  problem_title: string;
+  notes: string | null;
+  saved_at: string;
+}
+
+export interface IdeaWithContext extends Idea {
+  problem_id: string;
+  problem_title: string;
+}
+
+// ============================================
+// Axios Instance
+// ============================================
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '',
+  baseURL: '', // Same origin for Next.js API routes
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// ============================================
+// Token Refresh Logic
+// ============================================
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -66,75 +152,119 @@ api.interceptors.response.use(
 
 export default api;
 
+// ============================================
 // Auth API
+// ============================================
+
 export const authApi = {
   register: (data: { email: string; password: string; nickname?: string }) =>
-    api.post('/api/auth/register', data),
+    api.post<AuthResponse>('/api/auth/register', data),
 
   login: (data: { email: string; password: string; remember_me?: boolean }) =>
-    api.post('/api/auth/login', data),
+    api.post<AuthResponse>('/api/auth/login', data),
 
-  logout: () => api.post('/api/auth/logout'),
+  logout: () =>
+    api.post<{ message: string }>('/api/auth/logout'),
 
-  refresh: () => api.post('/api/auth/refresh'),
+  refresh: () =>
+    api.post<{ access_token: string }>('/api/auth/refresh'),
 
   googleAuth: (idToken: string) =>
-    api.post('/api/auth/google', { id_token: idToken }),
+    api.post<AuthResponse>('/api/auth/google', { id_token: idToken }),
 
   forgotPassword: (email: string) =>
-    api.post('/api/auth/forgot-password', { email }),
+    api.post<{ message: string }>('/api/auth/forgot-password', { email }),
 
   resetPassword: (token: string, newPassword: string) =>
-    api.post('/api/auth/reset-password', { token, new_password: newPassword }),
+    api.post<{ message: string }>('/api/auth/reset-password', { token, new_password: newPassword }),
 };
 
+// ============================================
 // User API
+// ============================================
+
 export const userApi = {
-  getProfile: () => api.get('/api/users/me'),
+  getProfile: () =>
+    api.get<User>('/api/users/me'),
+
   updateProfile: (data: { nickname?: string }) =>
-    api.patch('/api/users/me', data),
+    api.patch<User>('/api/users/me', data),
 };
 
+// ============================================
 // Discovery API
+// ============================================
+
 export const discoveryApi = {
   getProblems: (params?: {
     domain?: string;
-    trend?: string;
-    sentiment?: string;
+    trend?: 'RISING' | 'STABLE' | 'DECLINING';
+    sentiment?: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
     keywords?: string;
-    sort_by?: string;
+    sort_by?: 'recent' | 'oldest';
     limit?: number;
     offset?: number;
-  }) => api.get('/api/discovery/problems', { params }),
+  }) => api.get<ProblemListResponse>('/api/discovery/problems', { params }),
 
-  getProblem: (id: string) => api.get(`/api/discovery/problems/${id}`),
+  getProblem: (id: string) =>
+    api.get<Problem>(`/api/discovery/problems/${id}`),
 
-  getDomains: () => api.get('/api/discovery/domains'),
+  getDomains: () =>
+    api.get<{ domains: string[] }>('/api/discovery/domains'),
 };
 
+// ============================================
 // Ideas API (Stage B)
+// ============================================
+
 export const ideasApi = {
   generate: (problemId: string, feedback?: string) =>
-    api.post('/api/ideas/generate', { problem_id: problemId, feedback }),
+    api.post<GenerationSession>('/api/ideas/generate', {
+      problem_id: problemId,
+      feedback: feedback || null,
+    }),
 
   getSessions: (params?: { limit?: number; offset?: number }) =>
-    api.get('/api/ideas/sessions', { params }),
+    api.get<{ items: GenerationSession[]; total: number }>('/api/ideas/sessions', { params }),
 
   getSession: (sessionId: string) =>
-    api.get(`/api/ideas/sessions/${sessionId}`),
+    api.get<GenerationSession>(`/api/ideas/sessions/${sessionId}`),
 
   getLatestSessionForProblem: (problemId: string) =>
-    api.get(`/api/ideas/problem/${problemId}/latest`),
+    api.get<GenerationSession>(`/api/ideas/problem/${problemId}/latest`),
 
   saveIdea: (ideaId: string, notes?: string) =>
-    api.post(`/api/ideas/${ideaId}/save`, { notes }),
+    api.post<SavedIdea>(`/api/ideas/${ideaId}/save`, { notes: notes || null }),
 
   unsaveIdea: (savedId: string) =>
-    api.delete(`/api/ideas/saved/${savedId}`),
+    api.delete<{ message: string }>(`/api/ideas/saved/${savedId}`),
 
   getSavedIdeas: (params?: { limit?: number; offset?: number }) =>
-    api.get('/api/ideas/saved', { params }),
+    api.get<{ items: SavedIdea[]; total: number }>('/api/ideas/saved', { params }),
 
   checkSavedStatus: (ideaId: string) =>
-    api.get(`/api/ideas/${ideaId}/saved-status`),
+    api.get<{ is_saved: boolean; saved_id: string | null }>(`/api/ideas/${ideaId}/saved-status`),
+
+  toggleBookmark: (ideaId: string, isBookmarked: boolean) =>
+    api.patch<{ idea_id: string; is_bookmarked: boolean }>(`/api/ideas/${ideaId}/bookmark`, {
+      is_bookmarked: isBookmarked
+    }),
+
+  getBookmarkedIdeas: (params?: { limit?: number; offset?: number }) =>
+    api.get<{ items: IdeaWithContext[]; total: number }>('/api/ideas/bookmarked', { params }),
+};
+
+// ============================================
+// Payment API
+// ============================================
+
+export const paymentApi = {
+  confirmPayment: (data: { payment_key: string; order_id: string; amount: number }) =>
+    api.post<PaymentConfirmResponse>('/api/payment/confirm', data),
+
+  recordFailure: (data: { order_id: string; code: string; message: string }) =>
+    api.post<PaymentFailureResponse>('/api/payment/fail', data),
+
+  getPaymentStatus: (orderId: string) =>
+    api.get<PaymentStatusResponse>(`/api/payment/status/${orderId}`),
 };

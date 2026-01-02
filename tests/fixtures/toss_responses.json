@@ -1,0 +1,42 @@
+{
+  "create_payment_success": {
+    "paymentKey": "tviva20240330142105JQNMA",
+    "orderId": "550e8400-e29b-41d4-a716-446655440000",
+    "amount": 1990,
+    "checkout": {
+      "url": "https://api.tosspayments.com/v1/payments/checkout/tviva20240330142105JQNMA"
+    }
+  },
+  "confirm_payment_success": {
+    "paymentKey": "tviva20240330142105JQNMA",
+    "orderId": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "DONE",
+    "totalAmount": 1990,
+    "approvedAt": "2025-12-30T10:05:00+09:00",
+    "method": "카드",
+    "card": {
+      "company": "현대",
+      "number": "4000000000000008",
+      "installmentPlanMonths": 0,
+      "approveNo": "00000000",
+      "cardType": "신용",
+      "ownerType": "개인",
+      "acquireStatus": "READY"
+    },
+    "receipt": {
+      "url": "https://dashboard.tosspayments.com/receipt/redirection?transactionId=test_receipt"
+    }
+  },
+  "payment_error_insufficient_funds": {
+    "code": "INSUFFICIENT_FUNDS",
+    "message": "잔액이 부족합니다"
+  },
+  "payment_error_card_declined": {
+    "code": "CARD_DECLINED",
+    "message": "카드가 거절되었습니다"
+  },
+  "payment_error_expired": {
+    "code": "PAYMENT_EXPIRED",
+    "message": "결제 시간이 만료되었습니다"
+  }
+}

@@ -62,7 +62,8 @@ export function ProblemPreview({
       onAuthRequired();
       return;
     }
-    router.push(`/stage-b/${problemId}`);
+    // Redirect to payment checkout with problem info
+    router.push(`/payment/checkout?problemId=${problemId}`);
   };
 
   return (
@@ -140,7 +141,7 @@ export function ProblemPreview({
                 onClick={handleSelectProblem}
                 className="w-full bg-primary-600 text-white py-3 rounded-md hover:bg-primary-700 font-medium"
               >
-                Generate Ideas for This Problem
+                Pay to Unlock Stage B Ideas
               </button>
             </div>
           </>

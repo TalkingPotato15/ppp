@@ -3,18 +3,18 @@ export interface User {
   email: string;
   nickname: string | null;
   auth_provider: 'LOCAL' | 'GOOGLE';
+  is_active?: boolean;
   created_at: string;
+  last_login_at?: string | null;
 }
 
 export interface AuthResponse {
   user: User;
   access_token: string;
-  token_type: string;
 }
 
 export interface TokenResponse {
   access_token: string;
-  token_type: string;
 }
 
 export interface MessageResponse {
