@@ -1,13 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PaymentButton } from '@/components/payment/PaymentButton';
 import { discoveryApi } from '@/lib/api';
 import { ProblemDetail } from '@/types/problem';
 
-export default function CheckoutPage() {
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const problemId = searchParams.get('problemId');
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
@@ -183,5 +198,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -151,22 +151,26 @@ export function PaymentStatus({ payment, showDetails = true }: PaymentStatusProp
                   <span className="text-sm">{payment.order_name}</span>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Amount:</span>
-                  <span className="text-lg font-bold">
-                    {formatCurrency(payment.amount)}
-                  </span>
-                </div>
+                {payment.amount !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Amount:</span>
+                    <span className="text-lg font-bold">
+                      {formatCurrency(payment.amount)}
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Order ID:</span>
                   <span className="text-xs font-mono">{payment.order_id}</span>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Created:</span>
-                  <span className="text-sm">{formatDate(payment.created_at)}</span>
-                </div>
+                {payment.created_at && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Created:</span>
+                    <span className="text-sm">{formatDate(payment.created_at)}</span>
+                  </div>
+                )}
 
                 {payment.approved_at && (
                   <div className="flex justify-between items-center">
