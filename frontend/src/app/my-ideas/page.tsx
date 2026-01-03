@@ -13,19 +13,24 @@ export default function MyIdeasPage() {
   const { isLoading: authLoading, isAuthenticated } = useAuth();
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
   const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
 
   const fetchSavedIdeas = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await ideasApi.getSavedIdeas();
-      setSavedIdeas(response.data.items);
-      setTotal(response.data.total);
+      setSavedIdeas(response.data?.items || []);
+      setTotal(response.data?.total || 0);
     } catch (error) {
       console.error('Failed to fetch saved ideas:', error);
+      setSavedIdeas([]);
+      setTotal(0);
     } finally {
       setIsLoading(false);
+      setHasFetched(true);
     }
   }, []);
 
@@ -36,10 +41,10 @@ export default function MyIdeasPage() {
   }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !hasFetched) {
       fetchSavedIdeas();
     }
-  }, [isAuthenticated, fetchSavedIdeas]);
+  }, [isAuthenticated, hasFetched, fetchSavedIdeas]);
 
   const handleUnsave = async (savedId: string) => {
     try {
@@ -58,10 +63,19 @@ export default function MyIdeasPage() {
     setSelectedSavedId(savedIdea.id);
   };
 
-  if (authLoading || !isAuthenticated) {
+  if (authLoading) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    // Redirecting to login - show minimal loading state
+    return (
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
+        <p className="text-gray-500">Redirecting to login...</p>
       </div>
     );
   }
@@ -77,7 +91,7 @@ export default function MyIdeasPage() {
         </p>
       </div>
 
-      {isLoading ? (
+      {isLoading || !hasFetched ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
         </div>

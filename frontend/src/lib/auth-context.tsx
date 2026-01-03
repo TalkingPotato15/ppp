@@ -46,18 +46,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     const initAuth = async () => {
       try {
         const response = await userApi.getProfile();
-        setUser(response.data);
+        if (isMounted) setUser(response.data);
       } catch {
-        setUser(null);
+        if (isMounted) setUser(null);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
-    initAuth();
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        setUser(null);
+        setIsLoading(false);
+      }
+    }, 5000);
+
+    initAuth().finally(() => clearTimeout(timeout));
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, []);
 
   const login = async (

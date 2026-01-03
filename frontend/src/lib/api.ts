@@ -136,10 +136,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(new Error('Refresh failed'), null);
-        // Redirect to login if refresh fails
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
-        }
+        // Don't redirect here - let auth context handle it
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
