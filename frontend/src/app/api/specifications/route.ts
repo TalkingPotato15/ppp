@@ -45,23 +45,41 @@ export async function POST(request: NextRequest) {
     // Get the idea
     const { data: idea, error: ideaError } = await supabaseAdmin
       .from('generated_ideas')
-      .select(`
-        *,
-        session:generation_sessions(
-          problem:document_summaries(
-            title,
-            domain_tag
-          )
-        )
-      `)
+      .select('*')
       .eq('id', ideaId)
       .single();
 
     if (ideaError || !idea) {
+      console.error('Idea fetch error:', ideaError);
       return NextResponse.json(
         { detail: 'Idea not found' },
         { status: 404 }
       );
+    }
+
+    // Get session and problem info separately (optional, for context)
+    let problemTitle = 'Business Problem';
+    let problemDomain = 'general';
+
+    if (idea.session_id) {
+      const { data: session } = await supabaseAdmin
+        .from('generation_sessions')
+        .select('problem_id')
+        .eq('id', idea.session_id)
+        .single();
+
+      if (session?.problem_id) {
+        const { data: problem } = await supabaseAdmin
+          .from('document_summaries')
+          .select('title, domain_tag')
+          .eq('id', session.problem_id)
+          .single();
+
+        if (problem) {
+          problemTitle = problem.title || problemTitle;
+          problemDomain = problem.domain_tag || problemDomain;
+        }
+      }
     }
 
     // Initialize or get quota
@@ -124,11 +142,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Extract problem info
-    const problem = idea.session?.problem;
-    const problemTitle = problem?.title || 'Unknown Problem';
-    const problemDomain = problem?.domain_tag || 'general';
 
     try {
       // Prepare input for Tech Architect Agent
