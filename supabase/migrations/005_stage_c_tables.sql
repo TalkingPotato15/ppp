@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS technical_specifications (
     idea_id UUID NOT NULL REFERENCES generated_ideas(id) ON DELETE CASCADE,
     version_number INTEGER NOT NULL DEFAULT 1,
     constraints_snapshot JSONB NOT NULL,
-    prd_content JSONB NOT NULL,
-    architecture_content JSONB NOT NULL,
-    roadmap_content JSONB NOT NULL,
-    techstack_content JSONB NOT NULL,
+    prd_content JSONB,  -- nullable: filled after generation
+    architecture_content JSONB,  -- nullable: filled after generation
+    roadmap_content JSONB,  -- nullable: filled after generation
+    techstack_content JSONB,  -- nullable: filled after generation
     status spec_status NOT NULL DEFAULT 'generating',
     error_message TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
