@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Idea, SavedStatus } from '@/types/idea';
 
 interface IdeaDetailProps {
@@ -9,6 +10,7 @@ interface IdeaDetailProps {
   onSave: (ideaId: string) => void;
   onUnsave: (savedId: string) => void;
   onClose: () => void;
+  showStageCButton?: boolean;
 }
 
 export function IdeaDetail({
@@ -17,8 +19,14 @@ export function IdeaDetail({
   onSave,
   onUnsave,
   onClose,
+  showStageCButton = true,
 }: IdeaDetailProps) {
+  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleGoToStageC = () => {
+    router.push(`/stage-c/${idea.id}`);
+  };
 
   const handleSaveToggle = async () => {
     setIsSaving(true);
@@ -225,6 +233,33 @@ export function IdeaDetail({
           <div className="text-xs text-gray-400 pt-4 border-t">
             Generated at: {new Date(idea.created_at).toLocaleString()}
           </div>
+
+          {/* Stage C CTA */}
+          {showStageCButton && (
+            <div className="pt-6 border-t mt-6">
+              <div className="bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-lg p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      Ready to build this idea?
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Generate a complete technical specification including PRD, architecture, and roadmap.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleGoToStageC}
+                    className="flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium whitespace-nowrap"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Go to Stage C
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
