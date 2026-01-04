@@ -50,6 +50,14 @@ const CATEGORY_COLORS: Record<TechCategory, string> = {
 };
 
 export function TechStackViewer({ techStack }: TechStackViewerProps) {
+  if (!techStack || techStack.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <p className="text-gray-500">기술 스택 데이터를 불러오는 중...</p>
+      </div>
+    );
+  }
+
   // Group by category
   const groupedStack = techStack.reduce((acc, tech) => {
     const category = tech.category as TechCategory;

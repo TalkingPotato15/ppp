@@ -7,6 +7,14 @@ interface RoadmapViewerProps {
 }
 
 export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
+  if (!roadmap) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <p className="text-gray-500">로드맵 데이터를 불러오는 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Total Duration Header */}

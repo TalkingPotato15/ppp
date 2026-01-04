@@ -9,6 +9,14 @@ interface ArchitectureViewerProps {
 
 export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
   const mermaidRef = useRef<HTMLDivElement>(null);
+
+  if (!architecture) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <p className="text-gray-500">아키텍처 데이터를 불러오는 중...</p>
+      </div>
+    );
+  }
   const [diagramSvg, setDiagramSvg] = useState<string | null>(null);
   const [diagramError, setDiagramError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

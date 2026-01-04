@@ -15,6 +15,14 @@ const PRIORITY_LABELS: Record<Priority, string> = {
 };
 
 export function PRDViewer({ prd }: PRDViewerProps) {
+  if (!prd) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <p className="text-gray-500">PRD 데이터를 불러오는 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Title & Overview */}
