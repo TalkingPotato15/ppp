@@ -200,16 +200,14 @@ export async function generateSpecificationPDF(
   spec: TechnicalSpecification
 ): Promise<Blob> {
   // Dynamically import pdfmake to reduce bundle size
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdfMakeModule: any = await import('pdfmake/build/pdfmake');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdfFontsModule: any = await import('pdfmake/build/vfs_fonts');
-  const pdfMake = pdfMakeModule.default || pdfMakeModule;
-  const pdfFonts = pdfFontsModule.default || pdfFontsModule;
+  const pdfMakeModule = await import('pdfmake/build/pdfmake');
+  const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
+  const pdfMake = (pdfMakeModule.default || pdfMakeModule) as typeof import('pdfmake/build/pdfmake');
+  const pdfFonts = (pdfFontsModule.default || pdfFontsModule) as Record<string, unknown>;
   if (pdfFonts.pdfMake) {
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    pdfMake.vfs = (pdfFonts.pdfMake as { vfs: Record<string, string> }).vfs;
   } else if (pdfFonts.vfs) {
-    pdfMake.vfs = pdfFonts.vfs;
+    pdfMake.vfs = pdfFonts.vfs as Record<string, string>;
   }
 
   const docDefinition = {
