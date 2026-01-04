@@ -6,11 +6,30 @@ import { requireAuth, handleAuthError } from '@/lib/auth-middleware';
 import { generateTechnicalSpecification, type TechArchitectInput } from '@/lib/tech-architect-agent';
 import { validateConstraints, isValidationSuccess } from '@/lib/constraint-validator';
 import { initializeQuota, consumeRegenerationQuota } from '@/lib/regeneration-quota';
-import type { UserConstraints, SpecStatus } from '@/types/stage-c';
+import type { UserConstraints, SpecStatus, TechnicalSpecification } from '@/types/stage-c';
 
 interface CreateSpecRequest {
   ideaId: string;
   constraints: UserConstraints;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDbSpecToFrontend(dbSpec: any): TechnicalSpecification {
+  return {
+    id: dbSpec.id,
+    userId: dbSpec.user_id,
+    ideaId: dbSpec.idea_id,
+    versionNumber: dbSpec.version_number,
+    constraintsSnapshot: dbSpec.constraints_snapshot,
+    prd: dbSpec.prd_content,
+    architecture: dbSpec.architecture_content,
+    roadmap: dbSpec.roadmap_content,
+    techStack: dbSpec.techstack_content,
+    status: dbSpec.status,
+    errorMessage: dbSpec.error_message,
+    createdAt: dbSpec.created_at,
+    completedAt: dbSpec.completed_at,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -184,7 +203,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       return NextResponse.json({
-        specification: completedSpec,
+        specification: mapDbSpecToFrontend(completedSpec),
         remainingRegenerations: consumeResult.remainingCount,
       });
 
@@ -254,7 +273,7 @@ export async function GET(request: NextRequest) {
       : 3; // Default max
 
     return NextResponse.json({
-      specifications: specifications || [],
+      specifications: (specifications || []).map(mapDbSpecToFrontend),
       remainingRegenerations,
     });
 
