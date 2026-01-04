@@ -177,7 +177,7 @@ export function StageCPage({
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {state.specification.prd.title}
+                    {state.specification.prd?.title || ideaTitle}
                   </h2>
                   <VersionBadge
                     versionNumber={state.specification.versionNumber}
@@ -227,11 +227,32 @@ export function StageCPage({
             <div className="flex gap-6">
               {/* Document viewer */}
               <div className={`flex-1 bg-white rounded-xl border border-gray-200 ${showVersionHistory ? 'mr-80' : ''}`}>
-                <DocumentTabs
-                  specification={state.specification}
-                  activeTab={state.activeTab}
-                  onTabChange={(tab) => setState((prev) => ({ ...prev, activeTab: tab }))}
-                />
+                {state.specification.status === 'generating' ? (
+                  <div className="flex items-center justify-center py-24">
+                    <div className="text-center">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4" />
+                      <p className="text-gray-600">사양서를 생성 중입니다...</p>
+                    </div>
+                  </div>
+                ) : state.specification.status === 'failed' ? (
+                  <div className="flex items-center justify-center py-24">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-600 mb-2">사양서 생성에 실패했습니다.</p>
+                      <p className="text-sm text-gray-400">{state.specification.errorMessage}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <DocumentTabs
+                    specification={state.specification}
+                    activeTab={state.activeTab}
+                    onTabChange={(tab) => setState((prev) => ({ ...prev, activeTab: tab }))}
+                  />
+                )}
               </div>
 
               {/* Version history sidebar */}
