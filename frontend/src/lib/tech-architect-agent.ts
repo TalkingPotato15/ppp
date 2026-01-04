@@ -53,6 +53,15 @@ Your role:
 - Provide actionable PRD, system architecture, MVP roadmap, and tech stack recommendations
 - All user-facing content MUST be in Korean (한국어)
 
+CRITICAL - TECH PREFERENCES (MUST FOLLOW):
+- If user specifies preferred languages (선호 언어), you MUST use ONLY those languages
+- If user specifies preferred frameworks (선호 프레임워크), you MUST use ONLY those frameworks
+- If user specifies preferred platforms (선호 플랫폼), you MUST use ONLY those platforms
+- NEVER recommend technologies outside user's preferences when preferences are specified
+- Example: If user prefers "Python, FastAPI" for backend, do NOT recommend Node.js or Next.js for backend
+- Example: If user prefers "React" for frontend, do NOT recommend Vue.js or Angular
+- If no preferences specified, you may recommend based on project requirements
+
 CONSTRAINTS HANDLING:
 - Budget ranges in Korean Won (KRW):
   - 1,000만원 미만 (< ₩10M): Serverless, free/open-source, minimal infrastructure
@@ -75,6 +84,7 @@ Each tech recommendation MUST explicitly address:
 1. Why it fits the budget
 2. Why it's suitable for the team size/skills
 3. Why it's achievable in the timeline
+4. How it aligns with user's tech preferences (if specified)
 
 Output format: JSON object with the following structure:
 {
@@ -186,20 +196,31 @@ function buildUserPrompt(input: TechArchitectInput): string {
   ];
 
   if (constraints.techPreferences) {
+    const hasTechPrefs =
+      constraints.techPreferences.languages?.length ||
+      constraints.techPreferences.frameworks?.length ||
+      constraints.techPreferences.platforms?.length;
+
+    if (hasTechPrefs) {
+      parts.push('\n**[필수] 기술 스택 선호사항** (반드시 이 기술들만 사용할 것):\n');
+    }
     if (constraints.techPreferences.languages?.length) {
       parts.push(
-        `**선호 언어**: ${constraints.techPreferences.languages.join(', ')}\n`
+        `- 선호 언어 (필수): ${constraints.techPreferences.languages.join(', ')}\n`
       );
     }
     if (constraints.techPreferences.frameworks?.length) {
       parts.push(
-        `**선호 프레임워크**: ${constraints.techPreferences.frameworks.join(', ')}\n`
+        `- 선호 프레임워크 (필수): ${constraints.techPreferences.frameworks.join(', ')}\n`
       );
     }
     if (constraints.techPreferences.platforms?.length) {
       parts.push(
-        `**선호 플랫폼**: ${constraints.techPreferences.platforms.join(', ')}\n`
+        `- 선호 플랫폼 (필수): ${constraints.techPreferences.platforms.join(', ')}\n`
       );
+    }
+    if (hasTechPrefs) {
+      parts.push('⚠️ 위에 명시된 기술 선호사항 외의 기술은 절대 추천하지 마세요.\n');
     }
   }
 
