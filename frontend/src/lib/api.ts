@@ -276,7 +276,14 @@ export const ideasApi = {
 // ============================================
 
 export const paymentApi = {
-  confirmPayment: (data: { payment_key: string; order_id: string; amount: number; problem_id: string }) =>
+  confirmPayment: (data: {
+    payment_key: string;
+    order_id: string;
+    amount: number;
+    problem_id?: string;
+    idea_id?: string;
+    product_type?: 'STAGE_B' | 'STAGE_C';
+  }) =>
     api.post<PaymentConfirmResponse>('/api/payment/confirm', data),
 
   recordFailure: (data: { order_id: string; code: string; message: string }) =>
@@ -287,4 +294,7 @@ export const paymentApi = {
 
   checkUnusedPayment: (problemId: string) =>
     api.get<{ has_unused_payment: boolean; payment_id: string | null }>(`/api/payment/check-unused?problem_id=${problemId}`),
+
+  checkStageCPayment: (ideaId: string) =>
+    api.get<{ has_unused_payment: boolean; payment: { id: string; order_id: string; amount: number; created_at: string } | null }>(`/api/payment/check-stage-c?ideaId=${ideaId}`),
 };

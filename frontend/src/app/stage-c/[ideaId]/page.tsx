@@ -46,12 +46,19 @@ export default function StageCPageRoute() {
 
         const ideaData = await ideaResponse.json();
 
-        // TODO: Verify Stage C payment status
-        // const paymentResponse = await fetch(`/api/payment/status/stage-c/${ideaId}`);
-        // if (!paymentResponse.ok || !paymentData.paid) {
-        //   router.push(`/payment/checkout?product=stage-c&ideaId=${ideaId}`);
-        //   return;
-        // }
+        // Verify Stage C payment status
+        const paymentResponse = await fetch(`/api/payment/check-stage-c?ideaId=${ideaId}`);
+        if (paymentResponse.ok) {
+          const paymentData = await paymentResponse.json();
+          if (!paymentData.has_unused_payment) {
+            // No valid payment, redirect to checkout
+            router.push(`/payment/checkout?ideaId=${ideaId}&product=stage-c`);
+            return;
+          }
+        } else if (paymentResponse.status === 401) {
+          router.push('/auth/login?redirect=/stage-c/' + ideaId);
+          return;
+        }
 
         setIdea({
           id: ideaId,

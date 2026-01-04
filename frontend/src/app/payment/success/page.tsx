@@ -62,7 +62,15 @@ function PaymentSuccessContent() {
         const customerDataStr = sessionStorage.getItem(`payment_${orderId}`);
         const customerData = customerDataStr ? JSON.parse(customerDataStr) : null;
 
-        if (!customerData?.problemId) {
+        // Determine product type
+        const isStageC = customerData?.productType === 'STAGE_C' || customerData?.ideaId;
+
+        if (isStageC && !customerData?.ideaId) {
+          setError('Missing idea ID for Stage C payment');
+          setIsLoading(false);
+          return;
+        }
+        if (!isStageC && !customerData?.problemId) {
           setError('Missing problem ID for payment');
           setIsLoading(false);
           return;
@@ -73,7 +81,9 @@ function PaymentSuccessContent() {
           payment_key: paymentKey,
           order_id: orderId,
           amount: parseInt(amount, 10),
-          problem_id: customerData.problemId,
+          problem_id: isStageC ? undefined : customerData.problemId,
+          idea_id: isStageC ? customerData.ideaId : undefined,
+          product_type: isStageC ? 'STAGE_C' : 'STAGE_B',
         });
 
         if (response.data.status !== 'SUCCESS') {
@@ -87,7 +97,7 @@ function PaymentSuccessContent() {
           order_id: orderId,
           status: 'SUCCESS',
           amount: parseInt(amount, 10),
-          order_name: 'Stage B Idea Generation',
+          order_name: isStageC ? 'Stage C Technical Specification' : 'Stage B Idea Generation',
           customer_data: customerData,
           created_at: new Date().toISOString(),
           approved_at: response.data.approved_at || new Date().toISOString(),
@@ -99,9 +109,13 @@ function PaymentSuccessContent() {
           sessionStorage.removeItem(`payment_${orderId}`);
         }
 
-        // Payment successful, redirect to stage-b for idea generation
+        // Payment successful, redirect to appropriate stage
         setTimeout(() => {
-          router.push(`/stage-b/${customerData.problemId}`);
+          if (isStageC) {
+            router.push(`/stage-c/${customerData.ideaId}`);
+          } else {
+            router.push(`/stage-b/${customerData.problemId}`);
+          }
         }, 2000);
       } catch (err: any) {
         const errorMessage = err.response?.data?.detail || err.message || 'Failed to process payment';
@@ -183,13 +197,15 @@ function PaymentSuccessContent() {
         {payment && <PaymentStatus payment={payment} showDetails={true} />}
 
         <div className="mt-8 text-center space-y-4">
-          {payment?.customer_data?.problemId ? (
+          {(payment?.customer_data?.problemId || payment?.customer_data?.ideaId) ? (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
               <p className="text-lg font-semibold text-blue-900 mb-2">
                 Payment Successful!
               </p>
               <p className="text-blue-700 mb-4">
-                Redirecting you to Stage B to access your ideas...
+                {payment?.customer_data?.ideaId
+                  ? 'Redirecting you to Stage C to generate your technical specification...'
+                  : 'Redirecting you to Stage B to access your ideas...'}
               </p>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
             </div>

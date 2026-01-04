@@ -12,6 +12,14 @@ export async function GET(
     const user = await requireAuth();
     const { ideaId } = await params;
 
+    // Get idea details
+    const { data: idea } = await supabaseAdmin
+      .from('generated_ideas')
+      .select('id, title, description')
+      .eq('id', ideaId)
+      .single();
+
+    // Get saved status
     const { data: saved } = await supabaseAdmin
       .from('saved_ideas')
       .select('id')
@@ -22,6 +30,8 @@ export async function GET(
     return NextResponse.json({
       is_saved: saved !== null,
       saved_id: saved?.id || null,
+      title: idea?.title || null,
+      description: idea?.description || null,
     });
 
   } catch (error) {

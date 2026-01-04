@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { payment_key, order_id, amount, problem_id } = body;
+    const { payment_key, order_id, amount, problem_id, idea_id, product_type } = body;
 
     if (!payment_key || !order_id || !amount) {
       return NextResponse.json(
@@ -20,9 +20,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!problem_id) {
+    // Validate based on product type
+    const isStageC = product_type === 'STAGE_C' || idea_id;
+    if (isStageC && !idea_id) {
       return NextResponse.json(
-        { detail: 'problem_id is required' },
+        { detail: 'idea_id is required for Stage C payment' },
+        { status: 400 }
+      );
+    }
+    if (!isStageC && !problem_id) {
+      return NextResponse.json(
+        { detail: 'problem_id is required for Stage B payment' },
         { status: 400 }
       );
     }
@@ -89,11 +97,13 @@ export async function POST(request: NextRequest) {
           .from('payment_sessions')
           .upsert({
             user_id: user.id,
-            problem_id: problem_id,
+            problem_id: isStageC ? null : problem_id,
+            idea_id: isStageC ? idea_id : null,
+            product_type: isStageC ? 'STAGE_C' : 'STAGE_B',
             order_id: order_id,
             payment_key: payment_key,
             amount: amount,
-            order_name: 'Idea Generation',
+            order_name: isStageC ? 'Technical Specification' : 'Idea Generation',
             status: 'SUCCESS',
             is_used: false,
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -113,11 +123,13 @@ export async function POST(request: NextRequest) {
         .from('payment_sessions')
         .upsert({
           user_id: user.id,
-          problem_id: problem_id,
+          problem_id: isStageC ? null : problem_id,
+          idea_id: isStageC ? idea_id : null,
+          product_type: isStageC ? 'STAGE_C' : 'STAGE_B',
           order_id: order_id,
           payment_key: payment_key,
           amount: amount,
-          order_name: 'Idea Generation',
+          order_name: isStageC ? 'Technical Specification' : 'Idea Generation',
           status: 'FAILED',
           is_used: false,
           expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
@@ -142,11 +154,13 @@ export async function POST(request: NextRequest) {
       .from('payment_sessions')
       .upsert({
         user_id: user.id,
-        problem_id: problem_id,
+        problem_id: isStageC ? null : problem_id,
+        idea_id: isStageC ? idea_id : null,
+        product_type: isStageC ? 'STAGE_C' : 'STAGE_B',
         order_id: data.orderId,
         payment_key: data.paymentKey,
         amount: data.totalAmount,
-        order_name: data.orderName || 'Idea Generation',
+        order_name: data.orderName || (isStageC ? 'Technical Specification' : 'Idea Generation'),
         status: 'SUCCESS',
         is_used: false,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
