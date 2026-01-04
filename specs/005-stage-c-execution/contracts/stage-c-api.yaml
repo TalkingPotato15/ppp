@@ -1,0 +1,678 @@
+openapi: 3.1.0
+info:
+  title: Stage C - Technical Execution API
+  version: 1.0.0
+  description: |
+    API for Stage C Technical Execution feature.
+    Generates technical specifications (PRD, architecture, roadmap, tech stack)
+    from selected business ideas with user-provided constraints.
+
+servers:
+  - url: https://your-app.vercel.app/api
+    description: Production (Vercel)
+  - url: http://localhost:3000/api
+    description: Local development
+
+tags:
+  - name: Specifications
+    description: Technical specification generation and management
+  - name: Export
+    description: Specification export (PDF, Markdown)
+  - name: Constraints
+    description: Constraint validation
+
+paths:
+  /stage-c/specifications:
+    post:
+      operationId: createSpecification
+      tags: [Specifications]
+      summary: Generate technical specification
+      description: |
+        Creates a new technical specification for the given idea.
+        Requires payment verification for Stage C (₩2,500).
+        Returns the complete specification package.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpecificationRequest'
+      responses:
+        '200':
+          description: Specification generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecificationResponse'
+        '400':
+          description: Invalid constraints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '402':
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Idea not found
+        '409':
+          description: Specification already exists (use regenerate endpoint)
+        '500':
+          description: Generation failed
+
+  /stage-c/specifications/{specId}:
+    get:
+      operationId: getSpecification
+      tags: [Specifications]
+      summary: Get specification detail
+      description: Returns the complete specification package for the given ID.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+      responses:
+        '200':
+          description: Specification retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecificationResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not owner)
+        '404':
+          description: Specification not found
+
+  /stage-c/specifications/{specId}/regenerate:
+    post:
+      operationId: regenerateSpecification
+      tags: [Specifications]
+      summary: Regenerate specification with new constraints
+      description: |
+        Creates a new version of the specification with modified constraints.
+        Limited to 3 regenerations per idea (total 4 versions including initial).
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegenerateSpecificationRequest'
+      responses:
+        '200':
+          description: Specification regenerated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecificationResponse'
+        '400':
+          description: Invalid constraints
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not owner)
+        '404':
+          description: Specification not found
+        '429':
+          description: Regeneration limit reached (3/3)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaExceededResponse'
+
+  /stage-c/specifications/{specId}/export:
+    get:
+      operationId: exportSpecification
+      tags: [Export]
+      summary: Export specification
+      description: |
+        Downloads the specification in the specified format.
+        PDF includes all documents combined.
+        Markdown returns a ZIP with individual files.
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SpecId'
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [pdf, markdown]
+          description: Export format
+      responses:
+        '200':
+          description: Export file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not owner)
+        '404':
+          description: Specification not found
+
+  /stage-c/specifications/idea/{ideaId}:
+    get:
+      operationId: getSpecificationsByIdea
+      tags: [Specifications]
+      summary: Get all specification versions for an idea
+      description: Returns all specification versions ordered by version number.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The idea ID
+      responses:
+        '200':
+          description: Specifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecificationListResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Idea not found
+
+  /stage-c/constraints/validate:
+    post:
+      operationId: validateConstraints
+      tags: [Constraints]
+      summary: Validate user constraints
+      description: |
+        Validates the provided constraints before generation.
+        Checks for logical consistency (e.g., very low budget with short timeline).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserConstraints'
+      responses:
+        '200':
+          description: Constraints are valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Invalid constraints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /stage-c/quota/{ideaId}:
+    get:
+      operationId: getRegenerationQuota
+      tags: [Specifications]
+      summary: Get remaining regeneration count
+      description: Returns how many regenerations are remaining for the given idea.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Quota information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaResponse'
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+
+  parameters:
+    SpecId:
+      name: specId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The specification ID
+
+  schemas:
+    # Request schemas
+    CreateSpecificationRequest:
+      type: object
+      required:
+        - ideaId
+        - constraints
+      properties:
+        ideaId:
+          type: string
+          format: uuid
+          description: The selected idea from Stage B
+        constraints:
+          $ref: '#/components/schemas/UserConstraints'
+
+    RegenerateSpecificationRequest:
+      type: object
+      required:
+        - constraints
+      properties:
+        constraints:
+          $ref: '#/components/schemas/UserConstraints'
+
+    UserConstraints:
+      type: object
+      required:
+        - budget
+        - team
+        - timeline
+      properties:
+        budget:
+          type: object
+          required:
+            - range
+            - displayText
+          properties:
+            range:
+              type: string
+              enum: [UNDER_10M, 10M_TO_50M, 50M_TO_200M, OVER_200M]
+              description: Budget range in KRW
+            specificAmount:
+              type: integer
+              description: Specific budget amount in KRW (optional)
+            displayText:
+              type: string
+              description: Human-readable budget text (e.g., "1,000만원~5,000만원")
+        team:
+          type: object
+          required:
+            - size
+            - composition
+          properties:
+            size:
+              type: integer
+              minimum: 1
+              description: Total team size
+            composition:
+              type: object
+              required:
+                - junior
+                - middle
+                - senior
+              properties:
+                junior:
+                  type: integer
+                  minimum: 0
+                middle:
+                  type: integer
+                  minimum: 0
+                senior:
+                  type: integer
+                  minimum: 0
+        timeline:
+          type: string
+          enum: [1_TO_3_MONTHS, 3_TO_6_MONTHS, 6_TO_12_MONTHS, OVER_12_MONTHS]
+          description: Target MVP launch timeframe
+        techPreferences:
+          type: object
+          properties:
+            languages:
+              type: array
+              items:
+                type: string
+            frameworks:
+              type: array
+              items:
+                type: string
+            platforms:
+              type: array
+              items:
+                type: string
+        existingInfrastructure:
+          type: array
+          items:
+            type: string
+          description: Existing systems that new solution must integrate with
+
+    # Response schemas
+    SpecificationResponse:
+      type: object
+      required:
+        - specification
+        - remainingRegenerations
+      properties:
+        specification:
+          $ref: '#/components/schemas/TechnicalSpecification'
+        remainingRegenerations:
+          type: integer
+          minimum: 0
+          maximum: 3
+
+    SpecificationListResponse:
+      type: object
+      required:
+        - specifications
+        - remainingRegenerations
+      properties:
+        specifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicalSpecification'
+        remainingRegenerations:
+          type: integer
+
+    TechnicalSpecification:
+      type: object
+      required:
+        - id
+        - userId
+        - ideaId
+        - versionNumber
+        - constraintsSnapshot
+        - prd
+        - architecture
+        - roadmap
+        - techStack
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        ideaId:
+          type: string
+          format: uuid
+        versionNumber:
+          type: integer
+          minimum: 1
+          maximum: 4
+        constraintsSnapshot:
+          $ref: '#/components/schemas/UserConstraints'
+        prd:
+          $ref: '#/components/schemas/PRDDocument'
+        architecture:
+          $ref: '#/components/schemas/ArchitectureDiagram'
+        roadmap:
+          $ref: '#/components/schemas/MVPRoadmap'
+        techStack:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechStackRecommendation'
+        status:
+          type: string
+          enum: [generating, completed, failed]
+        errorMessage:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    PRDDocument:
+      type: object
+      required:
+        - title
+        - overview
+        - requirements
+        - userStories
+        - scope
+      properties:
+        title:
+          type: string
+        overview:
+          type: string
+        requirements:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - priority
+              - description
+              - acceptanceCriteria
+            properties:
+              id:
+                type: string
+              priority:
+                type: string
+                enum: [P0, P1, P2, P3]
+              description:
+                type: string
+              acceptanceCriteria:
+                type: array
+                items:
+                  type: string
+        userStories:
+          type: array
+          items:
+            type: string
+        scope:
+          type: object
+          required:
+            - included
+            - excluded
+          properties:
+            included:
+              type: array
+              items:
+                type: string
+            excluded:
+              type: array
+              items:
+                type: string
+
+    ArchitectureDiagram:
+      type: object
+      required:
+        - diagramCode
+        - components
+        - integrations
+      properties:
+        diagramCode:
+          type: string
+          description: Mermaid.js diagram code
+        diagramSvg:
+          type: string
+          description: Rendered SVG (client-side only)
+        components:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - description
+              - technology
+              - responsibilities
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              technology:
+                type: string
+              responsibilities:
+                type: array
+                items:
+                  type: string
+        integrations:
+          type: array
+          items:
+            type: string
+
+    MVPRoadmap:
+      type: object
+      required:
+        - phases
+        - totalDuration
+      properties:
+        phases:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - duration
+              - milestones
+              - deliverables
+            properties:
+              name:
+                type: string
+              duration:
+                type: string
+              milestones:
+                type: array
+                items:
+                  type: string
+              deliverables:
+                type: array
+                items:
+                  type: string
+              dependencies:
+                type: array
+                items:
+                  type: string
+        totalDuration:
+          type: string
+
+    TechStackRecommendation:
+      type: object
+      required:
+        - category
+        - recommended
+        - alternatives
+        - rationale
+        - estimatedCost
+        - constraintAlignment
+      properties:
+        category:
+          type: string
+          enum: [frontend, backend, database, infrastructure, monitoring, ci_cd]
+        recommended:
+          type: string
+        alternatives:
+          type: array
+          items:
+            type: string
+        rationale:
+          type: string
+        estimatedCost:
+          type: string
+          description: Monthly cost estimate in KRW
+        constraintAlignment:
+          type: object
+          required:
+            - budget
+            - team
+            - timeline
+          properties:
+            budget:
+              type: string
+            team:
+              type: string
+            timeline:
+              type: string
+
+    QuotaResponse:
+      type: object
+      required:
+        - usedCount
+        - maxCount
+        - remainingCount
+      properties:
+        usedCount:
+          type: integer
+        maxCount:
+          type: integer
+        remainingCount:
+          type: integer
+
+    QuotaExceededResponse:
+      type: object
+      required:
+        - error
+        - remainingCount
+      properties:
+        error:
+          type: string
+          example: "재생성 횟수를 모두 사용했습니다 (3/3)"
+        remainingCount:
+          type: integer
+          example: 0
+
+    ValidationResponse:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Non-blocking warnings about constraints
+
+    ValidationErrorResponse:
+      type: object
+      required:
+        - valid
+        - errors
+      properties:
+        valid:
+          type: boolean
+          example: false
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
