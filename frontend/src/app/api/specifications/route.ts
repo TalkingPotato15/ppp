@@ -195,6 +195,18 @@ export async function POST(request: NextRequest) {
         throw new Error(`Failed to update specification: ${updateError.message}`);
       }
 
+      // Mark payment as used for first specification
+      if (versionNumber === 1) {
+        await supabaseAdmin
+          .from('payment_sessions')
+          .update({ is_used: true })
+          .eq('user_id', user.id)
+          .eq('idea_id', ideaId)
+          .eq('product_type', 'STAGE_C')
+          .eq('status', 'SUCCESS')
+          .eq('is_used', false);
+      }
+
       // Fetch completed specification
       const { data: completedSpec } = await supabaseAdmin
         .from('technical_specifications')

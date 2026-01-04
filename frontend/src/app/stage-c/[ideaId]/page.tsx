@@ -46,7 +46,23 @@ export default function StageCPageRoute() {
 
         const ideaData = await ideaResponse.json();
 
-        // Verify Stage C payment status
+        // Check if specifications already exist for this idea
+        const specResponse = await fetch(`/api/specifications?ideaId=${ideaId}`);
+        if (specResponse.ok) {
+          const specData = await specResponse.json();
+          if (specData.specifications && specData.specifications.length > 0) {
+            // Already has specifications - payment was already verified and consumed
+            setIdea({
+              id: ideaId,
+              title: ideaData.title || '비즈니스 아이디어',
+              description: ideaData.description || '',
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // No existing specs - verify Stage C payment status
         const paymentResponse = await fetch(`/api/payment/check-stage-c?ideaId=${ideaId}`);
         if (paymentResponse.ok) {
           const paymentData = await paymentResponse.json();
