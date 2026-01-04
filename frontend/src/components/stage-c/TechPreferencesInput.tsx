@@ -9,8 +9,52 @@ interface TechPreferencesInputProps {
 }
 
 const POPULAR_LANGUAGES = ['TypeScript', 'JavaScript', 'Python', 'Java', 'Go', 'Rust', 'Kotlin', 'Swift'];
-const POPULAR_FRAMEWORKS = ['React', 'Next.js', 'Vue.js', 'Angular', 'FastAPI', 'NestJS', 'Spring Boot', 'Django'];
 const POPULAR_PLATFORMS = ['Vercel', 'AWS', 'GCP', 'Azure', 'Supabase', 'Firebase', 'Heroku', 'Railway'];
+
+// Framework compatibility map - which languages each framework works with
+const FRAMEWORK_LANGUAGE_MAP: Record<string, string[]> = {
+  // JavaScript/TypeScript frameworks
+  'React': ['JavaScript', 'TypeScript'],
+  'Next.js': ['JavaScript', 'TypeScript'],
+  'Vue.js': ['JavaScript', 'TypeScript'],
+  'Angular': ['TypeScript'],
+  'NestJS': ['TypeScript'],
+  'Express': ['JavaScript', 'TypeScript'],
+  'Svelte': ['JavaScript', 'TypeScript'],
+  // Python frameworks
+  'FastAPI': ['Python'],
+  'Django': ['Python'],
+  'Flask': ['Python'],
+  // Java frameworks
+  'Spring Boot': ['Java', 'Kotlin'],
+  // Go frameworks
+  'Gin': ['Go'],
+  'Echo': ['Go'],
+  'Fiber': ['Go'],
+  // Rust frameworks
+  'Actix': ['Rust'],
+  'Rocket': ['Rust'],
+  // Swift frameworks
+  'Vapor': ['Swift'],
+  // Kotlin frameworks
+  'Ktor': ['Kotlin'],
+};
+
+const ALL_FRAMEWORKS = Object.keys(FRAMEWORK_LANGUAGE_MAP);
+
+// Get compatible frameworks based on selected languages
+function getCompatibleFrameworks(selectedLanguages: string[]): string[] {
+  if (!selectedLanguages || selectedLanguages.length === 0) {
+    // No language selected - show all frameworks
+    return ALL_FRAMEWORKS;
+  }
+
+  return ALL_FRAMEWORKS.filter((framework) => {
+    const compatibleLanguages = FRAMEWORK_LANGUAGE_MAP[framework];
+    // Show framework if ANY of the selected languages is compatible
+    return selectedLanguages.some((lang) => compatibleLanguages.includes(lang));
+  });
+}
 
 interface ChipInputProps {
   label: string;
@@ -107,6 +151,22 @@ function ChipInput({ label, suggestions, values, onChange, placeholder }: ChipIn
 }
 
 export function TechPreferencesInput({ value, onChange }: TechPreferencesInputProps) {
+  const selectedLanguages = value.languages || [];
+  const compatibleFrameworks = getCompatibleFrameworks(selectedLanguages);
+
+  const updateLanguages = (languages: string[]) => {
+    // When languages change, remove any incompatible frameworks
+    const newCompatible = getCompatibleFrameworks(languages);
+    const currentFrameworks = value.frameworks || [];
+    const filteredFrameworks = currentFrameworks.filter((f) => newCompatible.includes(f));
+
+    onChange({
+      ...value,
+      languages: languages.length > 0 ? languages : undefined,
+      frameworks: filteredFrameworks.length > 0 ? filteredFrameworks : undefined,
+    });
+  };
+
   const updatePreferences = (key: keyof TechPreferences, values: string[]) => {
     onChange({
       ...value,
@@ -128,17 +188,17 @@ export function TechPreferencesInput({ value, onChange }: TechPreferencesInputPr
       <ChipInput
         label="프로그래밍 언어"
         suggestions={POPULAR_LANGUAGES}
-        values={value.languages || []}
-        onChange={(values) => updatePreferences('languages', values)}
+        values={selectedLanguages}
+        onChange={updateLanguages}
         placeholder="예: TypeScript, Python"
       />
 
       <ChipInput
         label="프레임워크"
-        suggestions={POPULAR_FRAMEWORKS}
+        suggestions={compatibleFrameworks}
         values={value.frameworks || []}
         onChange={(values) => updatePreferences('frameworks', values)}
-        placeholder="예: React, FastAPI"
+        placeholder={selectedLanguages.length > 0 ? "선택한 언어와 호환되는 프레임워크" : "언어를 먼저 선택하세요"}
       />
 
       <ChipInput
