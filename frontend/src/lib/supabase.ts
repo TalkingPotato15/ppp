@@ -139,3 +139,36 @@ export interface RawPost {
   scraped_at: string;
   collection_job_id: string | null;
 }
+
+// ============================================
+// Stage C Types (Technical Execution)
+// ============================================
+
+export type SpecStatus = 'generating' | 'completed' | 'failed';
+
+export interface TechnicalSpecification {
+  id: string;
+  user_id: string;
+  idea_id: string;
+  version_number: number;
+  constraints_snapshot: Record<string, unknown>;
+  prd_content: Record<string, unknown>;
+  architecture_content: Record<string, unknown>;
+  roadmap_content: Record<string, unknown>;
+  techstack_content: Record<string, unknown>;
+  status: SpecStatus;
+  error_message: string | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface RegenerationQuota {
+  id: string;
+  user_id: string;
+  idea_id: string;
+  used_count: number;
+  max_count: number;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
