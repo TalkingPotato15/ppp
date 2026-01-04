@@ -11,9 +11,10 @@ export async function GET(request: NextRequest) {
 
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
+    const bookmarkedOnly = searchParams.get('bookmarked_only') === 'true';
 
-    // Get bookmarked ideas from user's sessions
-    const { data: ideas, error, count } = await supabaseAdmin
+    // Build query for all user's ideas
+    let query = supabaseAdmin
       .from('generated_ideas')
       .select(`
         id,
@@ -26,18 +27,25 @@ export async function GET(request: NextRequest) {
         market_signals,
         confidence_score,
         is_bookmarked,
+        is_deleted,
         created_at,
         session:generation_sessions!inner(user_id, problem_id)
       `, { count: 'exact' })
-      .eq('is_bookmarked', true)
       .eq('session.user_id', user.id)
+      .eq('is_deleted', false);
+
+    if (bookmarkedOnly) {
+      query = query.eq('is_bookmarked', true);
+    }
+
+    const { data: ideas, error, count } = await query
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Failed to fetch bookmarked ideas:', error);
+      console.error('Failed to fetch my ideas:', error);
       return NextResponse.json(
-        { detail: 'Failed to fetch bookmarked ideas' },
+        { detail: 'Failed to fetch ideas' },
         { status: 500 }
       );
     }
@@ -69,7 +77,7 @@ export async function GET(request: NextRequest) {
           market_signals: idea.market_signals,
           confidence_score: idea.confidence_score,
           is_bookmarked: idea.is_bookmarked,
-          is_deleted: false, // bookmarked ideas are never deleted
+          is_deleted: idea.is_deleted,
           created_at: idea.created_at,
           problem_id: problemId,
           problem_title: problemTitle,

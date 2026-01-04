@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document defines the data entities and their relationships for the payment system POC. The model supports session-based payment flow with Toss Payments integration.
+This document defines the data entities and their relationships for the payment system. The model supports **persistent payment storage** with Toss Payments integration, enabling payment-to-generation tracking for Stage B idea generation.
 
 ## Entity Definitions
 
@@ -17,11 +17,14 @@ Represents a payment transaction session from initiation through completion.
 **Attributes**:
 - `session_id` (str, primary key): Unique identifier for the payment session (UUID)
 - `user_id` (str, foreign key): User who initiated the payment (from JWT token)
+- `problem_id` (str, foreign key): **NEW** - Problem this payment is for (references DocumentSummary.id)
 - `order_id` (str, unique): Our internal order identifier (UUID)
 - `payment_key` (str, nullable): Toss Payments payment key (returned after initiation)
 - `amount` (int): Payment amount in KRW (smallest currency unit, e.g., 1000 = ₩1,000)
-- `order_name` (str): Description of what's being purchased (e.g., "Stage C Technical Specs")
+- `order_name` (str): Description of what's being purchased (e.g., "Stage B Idea Generation")
 - `status` (PaymentStatus enum): Current payment state
+- `is_used` (bool): **NEW** - Whether this payment has been used for idea generation
+- `used_at` (datetime, nullable): **NEW** - Timestamp when payment was used for generation
 - `created_at` (datetime): When payment was initiated
 - `updated_at` (datetime): Last status update
 - `expires_at` (datetime): Session expiration (created_at + 30 minutes)
@@ -35,8 +38,16 @@ Represents a payment transaction session from initiation through completion.
 - `order_name` must be 1-100 characters
 - `expires_at` must be > `created_at`
 - `payment_key` is populated after successful Toss API call
+- `problem_id` must reference existing DocumentSummary
+- `is_used` defaults to FALSE, set to TRUE when used for generation
 
-**Storage Location**: In-memory dictionary or Redis (key: `session_id`, value: JSON-serialized PaymentSession)
+**Storage Location**: PostgreSQL (Supabase) - permanent storage for payment history tracking
+
+**Business Rules**:
+- A user can make multiple payments for the same problem
+- Each successful payment enables ONE idea generation
+- `is_used` is set to TRUE and `used_at` is recorded when Stage B generation uses this payment
+- Multiple unused payments for same (user_id, problem_id) are allowed
 
 ### PaymentStatus (Enum)
 

@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/004-stage-b-idea-generation/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/ideas-api.yaml
 
-**Note**: This feature enhances existing Stage B implementation with AI agent, RAG integration, one-time generation, and bookmarking.
+**Note**: This feature enhances existing Stage B implementation with AI agent, RAG integration, **payment-based generation** (1 payment = 1 generation), and bookmarking as a filter for My Ideas.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -39,6 +39,14 @@
 - [x] T011 [P] Update IdeaResponse schema with new fields in `src/schemas/ideas.py`
 - [x] T012 [P] Update frontend Idea type with new fields in `frontend/src/types/idea.ts`
 
+### **NEW: Payment-Generation Linking & Soft Delete (Per Updated Spec)**
+
+- [ ] T012a **[NEW]** Add `payment_id` field to GenerationSession model (FK to payment_sessions, UNIQUE)
+- [ ] T012b **[NEW]** Add `is_deleted` boolean field to GeneratedIdea model (DEFAULT FALSE for soft delete)
+- [ ] T012c **[NEW]** Create Supabase migration for new payment_id and is_deleted fields
+- [ ] T012d **[NEW]** Add index on `payment_id` (unique constraint)
+- [ ] T012e **[NEW]** Add partial index on `is_deleted` WHERE is_deleted = FALSE
+
 **Checkpoint**: Database schema ready - user story implementation can now begin
 
 ---
@@ -48,6 +56,8 @@
 **Goal**: Users can generate AI-powered business ideas grounded in real market data via RAG
 
 **Independent Test**: Log in → Select problem → Pay → Click "Generate Ideas" → See 3-5 relevant ideas with market signals
+
+**⚠️ UPDATED**: Generation is now **per-payment**, not per-problem. Multiple payments = multiple generations allowed.
 
 ### Backend: RAG Service
 
@@ -75,17 +85,25 @@
 
 - [x] T017 [US1] Add market_signals and confidence_score to GeneratedIdeaData in `src/services/ai_agent.py`
 
-### Backend: One-Time Generation Enforcement
+### Backend: Payment-Based Generation Enforcement (UPDATED)
 
-- [x] T018 [US1] Add one-time generation check in `src/api/routers/ideas.py`:
-  - Before generating, check if completed session exists for (user_id, problem_id)
-  - If exists, return 409 Conflict with existing session data
-  - Use existing `get_latest_session_for_problem` helper
+- [ ] T018 **[UPDATED]** [US1] Add payment validation in `src/api/routers/ideas.py`:
+  - Before generating, check if unused payment exists for (user_id, problem_id)
+  - If no unused payment, return 402 Payment Required
+  - If unused payment exists, proceed with generation
+  - ~~One-time per problem~~ → **One-time per payment**
+
+- [ ] T018a **[NEW]** [US1] Add payment consumption in `src/api/routers/ideas.py`:
+  - After successful generation, mark payment as `is_used = TRUE`
+  - Record `used_at` timestamp
+  - Link `payment_id` to GenerationSession
 
 - [x] T019 [US1] Update `generate_ideas` endpoint to integrate RAG in `src/api/routers/ideas.py`:
   - Call RAG service to retrieve similar problems
   - Pass RAG context to AI agent
   - Store RAG context in session for debugging
+
+- [ ] T019a **[NEW]** [US1] Update `generate_ideas` to accept and validate `payment_id` parameter
 
 ### Backend: Store New Fields
 
@@ -93,26 +111,29 @@
   - Save `market_signals`, `confidence_score` on GeneratedIdea
   - Save `rag_context` on GenerationSession
 
-### Frontend: Stage B Page Updates
+### Frontend: Stage B Page Updates (UPDATED for payment-based flow)
 
-- [x] T021 [US1] Update Stage B page to check existing session in `frontend/src/app/stage-b/[problemId]/page.tsx`:
-  - On page load, call `GET /api/ideas/problem/{problemId}/latest`
-  - If session exists with COMPLETED status, show ideas directly
-  - Only show "Generate" button if no completed session
+- [ ] T021 **[UPDATED]** [US1] Update Stage B page for payment-based generation in `frontend/src/app/stage-b/[problemId]/page.tsx`:
+  - On page load, check for unused payment via `GET /api/payment/unused?problem_id={problemId}`
+  - If no unused payment, show "Pay to Generate" button → redirect to checkout
+  - If unused payment exists, show "Generate Ideas" button
+  - Show ALL previous generation sessions for this problem (multiple generations allowed)
 
 - [x] T022 [US1] Remove FeedbackInput component usage in `frontend/src/app/stage-b/[problemId]/page.tsx`:
   - Remove regeneration-related UI elements
   - Simplify to single "Generate Ideas" flow
 
-- [x] T023 [US1] Update GenerateButton to handle one-time generation in `frontend/src/components/stage-b/GenerateButton.tsx`:
-  - Disable button after successful generation
-  - Show "Ideas Generated" state instead of "Generate Again"
+- [ ] T023 **[UPDATED]** [US1] Update GenerateButton in `frontend/src/components/stage-b/GenerateButton.tsx`:
+  - Accept `payment_id` prop
+  - Pass `payment_id` to generation API call
+  - After generation, refresh to show new ideas alongside existing ones
 
-- [x] T024 [US1] Update useIdeas hook for one-time flow in `frontend/src/hooks/useIdeas.ts`:
-  - Add `checkExistingSession(problemId)` function
-  - Handle 409 Conflict response gracefully
+- [ ] T024 **[UPDATED]** [US1] Update useIdeas hook in `frontend/src/hooks/useIdeas.ts`:
+  - Add `checkUnusedPayment(problemId)` function
+  - Add `getAllSessionsForProblem(problemId)` to show multiple generations
+  - Handle 402 Payment Required response gracefully
 
-**Checkpoint**: User Story 1 complete - users can generate RAG-powered ideas once per problem
+**Checkpoint**: User Story 1 complete - users can generate RAG-powered ideas once per payment
 
 ---
 
@@ -141,21 +162,24 @@
 
 ---
 
-## Phase 5: User Story 3 - Bookmark Favorite Ideas (Priority: P2)
+## Phase 5: User Story 3 - My Ideas (All Generated) & Bookmark Filter (Priority: P1)
 
-**Goal**: Users can bookmark/star their favorite ideas for quick access
+**Goal**: ALL generated ideas auto-saved to My Ideas. Bookmark is a FILTER, not a save action.
 
-**Independent Test**: View ideas → Click bookmark icon → Go to My Ideas → Filter by bookmarked → See bookmarked idea
+**Independent Test**: Generate ideas → ALL appear in My Ideas automatically → Click bookmark → Filter by bookmarked → See only bookmarked
 
-### Backend: Bookmark API
+**⚠️ UPDATED**: My Ideas now shows ALL generated ideas. Bookmark = filter, not save.
 
-- [x] T028 [US3] Add bookmark endpoint in `src/api/routers/ideas.py`:
-  - `PATCH /{idea_id}/bookmark` accepting `BookmarkRequest`
-  - Verify user owns the idea (via session ownership)
-  - Return `BookmarkResponse` with updated status
+### Backend: My Ideas API (UPDATED)
+
+- [ ] T028 **[UPDATED]** [US3] Add "Get all user's ideas" endpoint in `src/api/routers/ideas.py`:
+  - `GET /my-ideas` with pagination
+  - Return ALL ideas from ALL sessions (not just bookmarked)
+  - Filter out `is_deleted = TRUE`
+  - Include problem context (title, id)
 
 - [x] T029 [US3] Add list bookmarked ideas endpoint in `src/api/routers/ideas.py`:
-  - `GET /bookmarked` with pagination
+  - `GET /bookmarked` with pagination (filter for bookmark = true)
   - Return ideas with problem context
 
 - [x] T030 [US3] Add bookmark schemas in `src/schemas/ideas.py`:
@@ -167,7 +191,18 @@
   - `toggle_bookmark(idea_id, user_id, is_bookmarked)`
   - `get_bookmarked_ideas(user_id, limit, offset)`
 
-### Frontend: Bookmark UI
+### Backend: Soft Delete API (NEW)
+
+- [ ] T031a **[NEW]** [US3] Add soft delete endpoint in `src/api/routers/ideas.py`:
+  - `DELETE /{idea_id}` sets `is_deleted = TRUE` (soft delete)
+  - Verify user owns the idea
+  - Return 204 No Content
+
+- [ ] T031b **[NEW]** [US3] Add `get_all_user_ideas(user_id, include_deleted=False)` in `src/storage/idea_store.py`
+
+- [ ] T031c **[NEW]** [US3] Add `soft_delete_idea(idea_id, user_id)` in `src/storage/idea_store.py`
+
+### Frontend: My Ideas Page (UPDATED)
 
 - [x] T032 [P] [US3] Add bookmark icon to IdeaCard in `frontend/src/components/stage-b/IdeaCard.tsx`:
   - Star/bookmark icon that toggles on click
@@ -182,16 +217,22 @@
   - `toggleBookmark(ideaId, isBookmarked)`
   - `getBookmarkedIdeas(limit, offset)`
 
+- [ ] T034a **[NEW]** [US3] Add `getAllMyIdeas(limit, offset)` in `frontend/src/lib/api.ts`
+
+- [ ] T034b **[NEW]** [US3] Add `deleteIdea(ideaId)` in `frontend/src/lib/api.ts`
+
 - [x] T035 [US3] Add bookmark hooks in `frontend/src/hooks/useIdeas.ts`:
   - `useToggleBookmark()` mutation hook
   - `useBookmarkedIdeas()` query hook
 
-- [x] T036 [US3] Update My Ideas page with bookmark filter in `frontend/src/app/my-ideas/page.tsx`:
-  - Add "Bookmarked" filter toggle
-  - Show bookmark status on each idea
-  - Use `getBookmarkedIdeas` when filter active
+- [ ] T036 **[UPDATED]** [US3] Rewrite My Ideas page in `frontend/src/app/my-ideas/page.tsx`:
+  - Show ALL generated ideas by default (not just saved)
+  - Group by problem/session
+  - Add "Bookmarked Only" filter toggle
+  - Add delete button with confirmation
+  - Show multiple generation sessions for same problem separately
 
-**Checkpoint**: User Story 3 complete - users can bookmark and filter their favorite ideas
+**Checkpoint**: User Story 3 complete - My Ideas shows all generated ideas, bookmark filters favorites
 
 ---
 
@@ -327,16 +368,28 @@ T028-T031 (backend) || T032-T033 (frontend types)
 
 ## Task Summary
 
-| Phase | Tasks | Parallel Opportunities |
-|-------|-------|------------------------|
-| Phase 1: Setup | 4 | 2 parallel groups |
-| Phase 2: Foundational | 8 | 2 parallel groups |
-| Phase 3: US1 Generation | 12 | 4 parallel groups |
-| Phase 4: US2 Viewing | 3 | 2 parallel tasks |
-| Phase 5: US3 Bookmark | 9 | 3 parallel groups |
-| Phase 6: US4 History | 4 | 1 parallel group |
-| Phase 7: Polish | 6 | 4 parallel tasks |
-| **Total** | **46** | |
+| Phase | Tasks | Parallel Opportunities | Status |
+|-------|-------|------------------------|--------|
+| Phase 1: Setup | 4 | 2 parallel groups | Mostly done |
+| Phase 2: Foundational | 8 + **5 NEW** | 2 parallel groups | **NEW tasks pending** |
+| Phase 3: US1 Generation | 12 + **4 UPDATED** | 4 parallel groups | **Needs rework** |
+| Phase 4: US2 Viewing | 3 | 2 parallel tasks | Done |
+| Phase 5: US3 My Ideas | 9 + **6 NEW** | 3 parallel groups | **Needs rework** |
+| Phase 6: US4 History | 4 | 1 parallel group | Done |
+| Phase 7: Polish | 6 | 4 parallel tasks | Mostly done |
+| **Total** | **46 + 15 NEW/UPDATED** | | |
+
+### NEW Tasks Summary (Per Updated Spec)
+
+| Task ID | Description | Phase |
+|---------|-------------|-------|
+| T012a-e | Payment-Generation linking, soft delete | Phase 2 |
+| T018, T018a, T019a | Payment validation & consumption | Phase 3 |
+| T021, T023, T024 | Frontend payment-based flow | Phase 3 |
+| T028 | Get all user's ideas endpoint | Phase 5 |
+| T031a-c | Soft delete API | Phase 5 |
+| T034a-b | Frontend delete API | Phase 5 |
+| T036 | Rewrite My Ideas page | Phase 5 |
 
 ---
 

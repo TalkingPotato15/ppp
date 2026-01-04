@@ -26,7 +26,7 @@ class GenerationStatus(str, Enum):
 
 
 class GenerationSession(Base):
-    """A single idea generation session for a user and problem."""
+    """A single idea generation session for a user, problem, and payment."""
 
     __tablename__ = "generation_sessions"
 
@@ -39,12 +39,15 @@ class GenerationSession(Base):
     problem_id: Mapped[str] = mapped_column(
         String(36), nullable=False  # References DocumentSummary but no FK constraint
     )
+    payment_id: Mapped[Optional[str]] = mapped_column(
+        String(36), nullable=True, unique=True  # One payment = one generation (UNIQUE)
+    )
     status: Mapped[GenerationStatus] = mapped_column(
         SAEnum(GenerationStatus), nullable=False, default=GenerationStatus.PENDING
     )
     feedback: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
-    )  # User feedback for regeneration
+    )  # DEPRECATED - was for regeneration
     error_message: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True
     )  # Error details if failed
@@ -67,4 +70,5 @@ class GenerationSession(Base):
     __table_args__ = (
         Index("ix_generation_sessions_user_id", "user_id"),
         Index("ix_generation_sessions_problem_id", "problem_id"),
+        Index("ix_generation_sessions_payment_id", "payment_id"),
     )

@@ -3,7 +3,7 @@
 **Feature Branch**: `004-stage-b-idea-generation`
 **Created**: 2025-12-29
 **Status**: Draft
-**Input**: User description: "Stage B development with AI agent for idea generation. Idea generation happens only once per problem - no regeneration feature."
+**Input**: User description: "Stage B development with AI agent for idea generation. One payment enables one generation per problem. Multiple payments allow multiple generations."
 
 ## Overview
 
@@ -44,34 +44,36 @@ Users can view generated ideas in detail, expand individual ideas for more infor
 
 ---
 
-### User Story 3 - Bookmark Favorite Ideas (Priority: P2)
+### User Story 3 - My Ideas (All Generated Ideas) (Priority: P1)
 
-All generated ideas are automatically saved since users paid for them. Users can bookmark/star their favorite ideas for quick access.
+All generated ideas are automatically stored in the user's "My Ideas" since users paid for them. Ideas persist indefinitely unless the user explicitly deletes them. This is the user's personal idea library.
 
-**Why this priority**: Enhances user experience by allowing users to highlight their most valuable ideas from their collection. Not essential for MVP but improves usability.
+**Why this priority**: Core feature - users paid for these ideas and must have permanent access. Without this, the paid service value is not delivered.
 
-**Independent Test**: Generate ideas, bookmark one, then verify it appears with bookmark indicator in the ideas list.
+**Independent Test**: Generate ideas, then verify ALL generated ideas appear in "My Ideas" page automatically.
 
 **Acceptance Scenarios**:
 
-1. **Given** ideas have been generated, **When** user views "My Ideas" page, **Then** all generated ideas are listed with problem context (automatically saved)
-2. **Given** ideas are displayed, **When** user clicks bookmark/star icon on an idea, **Then** the idea is marked as bookmarked
-3. **Given** user has bookmarked ideas, **When** they filter by bookmarked, **Then** only bookmarked ideas are shown
+1. **Given** user has generated ideas for a problem, **When** generation completes, **Then** all generated ideas are automatically stored in "My Ideas"
+2. **Given** user accesses "My Ideas" page, **When** page loads, **Then** all previously generated ideas are displayed grouped by problem
+3. **Given** user has ideas in "My Ideas", **When** user clicks delete on an idea, **Then** the idea is removed from their collection (with confirmation)
+4. **Given** user has generated ideas multiple times for same problem (multiple payments), **When** viewing "My Ideas", **Then** all generation sessions are shown separately
 
 ---
 
-### User Story 4 - Generation History (Priority: P3)
+### User Story 4 - Bookmark/Favorite Filter (Priority: P2)
 
-Users can view their past idea generation sessions, allowing them to revisit previously generated ideas for different problems.
+Users can bookmark/star their favorite ideas for quick access. Bookmarking is a filter mechanism to highlight preferred ideas from the full collection.
 
-**Why this priority**: Nice-to-have feature for user convenience. Can be deferred to later iterations.
+**Why this priority**: Enhances user experience by allowing users to highlight their most valuable ideas from their collection. Not essential for MVP but improves usability.
 
-**Independent Test**: Generate ideas for multiple problems, then verify history shows all sessions.
+**Independent Test**: Bookmark an idea, then verify the bookmark filter shows only bookmarked ideas.
 
 **Acceptance Scenarios**:
 
-1. **Given** user has generated ideas for multiple problems, **When** they access generation history, **Then** list of past sessions is displayed with problem titles and dates
-2. **Given** history list is displayed, **When** user clicks on a past session, **Then** the generated ideas from that session are shown
+1. **Given** ideas are displayed in "My Ideas", **When** user clicks bookmark/star icon on an idea, **Then** the idea is marked as bookmarked
+2. **Given** user has bookmarked some ideas, **When** they activate bookmark filter, **Then** only bookmarked ideas are shown
+3. **Given** user removes bookmark from an idea, **When** bookmark filter is active, **Then** the idea disappears from filtered view (but remains in full list)
 
 ---
 
@@ -83,6 +85,8 @@ Users can view their past idea generation sessions, allowing them to revisit pre
 - How to handle concurrent generation requests from same user?
 - What happens when user's session expires during generation?
 - How to handle when selected problem data is no longer available?
+- What happens when user tries to generate without valid payment?
+- How to handle when user has already used their payment for this problem?
 
 ## Requirements *(mandatory)*
 
@@ -94,33 +98,38 @@ Users can view their past idea generation sessions, allowing them to revisit pre
 - **FR-003**: System MUST display generated ideas in structured format (title, description, target audience, differentiators)
 - **FR-004**: System MUST support generating 3-5 ideas per request
 - **FR-005**: System MUST handle AI agent API errors gracefully with user-friendly messages
-- **FR-006**: System MUST automatically save generated ideas to user's account (paid service - ideas persist indefinitely)
+- **FR-006**: System MUST verify valid unused payment exists before allowing generation
+- **FR-007**: System MUST mark payment as used after successful generation
+
+**My Ideas (Idea Storage)**
+- **FR-008**: System MUST automatically store all generated ideas to user's "My Ideas" (paid service - ideas persist indefinitely)
+- **FR-009**: System MUST display all user's generated ideas in "My Ideas" page grouped by problem/session
+- **FR-010**: System MUST allow users to delete ideas from their collection (with confirmation)
+- **FR-011**: System MUST support multiple generation sessions for same problem (if user paid multiple times)
 
 **Idea Viewing**
-- **FR-007**: System MUST display idea list with expandable cards
-- **FR-008**: System MUST show full idea details on expansion (description, target audience, market opportunity, implementation hints)
-- **FR-009**: System MUST allow users to navigate between multiple generated ideas
+- **FR-012**: System MUST display idea list with expandable cards
+- **FR-013**: System MUST show full idea details on expansion (description, target audience, market opportunity, implementation hints)
+- **FR-014**: System MUST allow users to navigate between multiple generated ideas
 
-**Bookmarking Ideas**
-- **FR-010**: Users MUST be able to bookmark/star favorite ideas from their saved ideas
-- **FR-011**: System MUST provide access to all generated ideas via "My Ideas" page
-- **FR-012**: System MUST allow filtering by bookmarked status
+**Bookmarking (Filtering)**
+- **FR-015**: Users MUST be able to bookmark/star favorite ideas from their generated ideas
+- **FR-016**: System MUST allow filtering by bookmarked status in "My Ideas" page
+- **FR-017**: Bookmark status MUST persist across sessions
 
 **Access Control**
-- **FR-013**: Stage B MUST be accessible only to authenticated users
-- **FR-014**: System MUST redirect unauthenticated users to login
-- **FR-015**: System MUST preserve selected problem context after login redirect
-
-**History**
-- **FR-016**: System MUST record idea generation sessions for each user
-- **FR-017**: System MUST allow users to view past generation sessions
+- **FR-018**: Stage B MUST be accessible only to authenticated users
+- **FR-019**: System MUST redirect unauthenticated users to login
+- **FR-020**: System MUST preserve selected problem context after login redirect
+- **FR-021**: System MUST verify payment status before allowing idea generation
 
 ### Key Entities
 
-- **GenerationSession**: A single idea generation request (session ID, user ID, problem ID, timestamp, status, rag_context)
-- **GeneratedIdea**: An individual idea from AI agent (idea ID, session ID, title, description, target audience, differentiators, market opportunity, implementation hints, market_signals, confidence_score, is_bookmarked, created_at)
+- **GenerationSession**: A single idea generation request (session ID, user ID, problem ID, payment ID, timestamp, status, rag_context)
+- **GeneratedIdea**: An individual idea from AI agent (idea ID, session ID, title, description, target audience, differentiators, market opportunity, implementation hints, market_signals, confidence_score, is_bookmarked, is_deleted, created_at)
 - **Problem**: Reference to problem selected from Stage A (from 001-data-pipeline)
 - **RAGContext**: Retrieved documents used for generation (document IDs, similarity scores, extracted content)
+- **Payment**: Reference to payment that enabled this generation (payment ID, user ID, problem ID, is_used, used_at)
 
 ## AI Agent Specification *(mandatory)*
 
@@ -309,11 +318,12 @@ signals from the context.
 - LLM response time is typically under 20 seconds per generation
 - Each generation request produces 3-5 ideas
 - Users must complete Stage A (problem selection) before accessing Stage B
-- Users must pay before accessing Stage B idea generation (via 002-payment-system)
+- Users must have valid unused payment before idea generation (via 002-payment-system)
+- **Payment model**: 1 payment = 1 generation for a specific problem. Multiple payments for same problem allow multiple generations.
 - Problem data from Stage A is passed via URL parameter or session storage
-- Generated ideas are automatically saved and persist indefinitely (paid content)
-- Users can only generate ideas once per problem (no regeneration)
-- Generation history is retained indefinitely for paid users
+- **All generated ideas are automatically stored in "My Ideas"** and persist indefinitely (paid content)
+- Users can delete individual ideas from their collection if desired
+- **Bookmark/star is for filtering favorites**, not for storing ideas (all ideas are stored automatically)
 - LLM costs are acceptable (~$0.10-0.30 per generation with GPT-4)
 
 ## Dependencies
@@ -326,10 +336,10 @@ signals from the context.
 
 ## Out of Scope
 
-- Idea regeneration (users get one set of ideas per problem - this is intentional to ensure commitment)
 - Idea sharing between users
 - Idea export functionality (PDF, etc.)
 - Collaborative idea refinement
 - Integration with Stage C (Solution Design)
 - Analytics dashboard for generation quality
 - Agent fine-tuning or custom model training (uses pre-trained LLM)
+- Free regeneration (each generation requires payment)

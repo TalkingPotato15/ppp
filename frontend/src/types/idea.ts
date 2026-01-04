@@ -15,6 +15,7 @@ export interface Idea {
   market_signals: string[] | null;
   confidence_score: number | null;
   is_bookmarked: boolean;
+  is_deleted: boolean;
   created_at: string;
 }
 
@@ -66,6 +67,18 @@ export interface BookmarkResponse {
 export interface IdeaWithContext extends Idea {
   problem_id: string;
   problem_title: string;
+  is_deleted: boolean;
+}
+
+export interface MyIdeasList {
+  items: IdeaWithContext[];
+  total: number;
+}
+
+export interface SoftDeleteResponse {
+  idea_id: string;
+  is_deleted: boolean;
+  message: string;
 }
 
 export interface BookmarkedIdeasList {

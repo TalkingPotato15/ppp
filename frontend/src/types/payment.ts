@@ -46,4 +46,5 @@ export interface PaymentConfirmResponse {
   amount: number;
   method: string;
   approved_at: string;
+  error_message?: string;
 }

@@ -60,13 +60,16 @@ After completing a payment attempt through Toss Payments, users can view the sta
 - **FR-007**: System MUST communicate payment failure status clearly to users with appropriate error messaging
 - **FR-008**: System MUST prevent duplicate payment submissions during processing
 - **FR-009**: Users MUST be able to identify whether their payment succeeded or failed within 5 seconds of returning from Toss Payments
-- **FR-010**: System MUST maintain payment status information for the duration of the user session
+- **FR-010**: System MUST persist payment records permanently to user's account
+- **FR-011**: System MUST associate each payment with a specific user (user_id) and problem (problem_id)
+- **FR-012**: System MUST track payment usage status (is_used) for idea generation validation
+- **FR-013**: System MUST allow querying unused payments for a user-problem combination
 
 ### Key Entities
 
-- **Payment Transaction**: Represents a payment attempt with attributes including transaction identifier, Toss payment key, order ID, amount, status (pending/success/failed), timestamp, and response data from Toss
+- **Payment Transaction**: Represents a payment attempt with attributes including transaction identifier, Toss payment key, order ID, amount, status (pending/success/failed), timestamp, response data from Toss, **user_id** (owner of this payment), **problem_id** (which problem this payment is for), **is_used** (whether used for idea generation), **used_at** (timestamp when used)
 - **Payment Status**: The outcome of a Toss payment transaction (success, failed, pending, cancelled) with associated messaging for user communication
-- **Order**: The item or service being purchased, linked to the payment transaction
+- **Order**: The item or service being purchased, linked to the payment transaction and the target problem
 
 ## Success Criteria *(mandatory)*
 
@@ -83,19 +86,24 @@ After completing a payment attempt through Toss Payments, users can view the sta
 - This is a proof-of-concept using Toss Payments test mode (not production)
 - Test payment credentials and sandbox environment will be used
 - The POC focuses on demonstrating the integration flow rather than handling all edge cases
-- Session-based storage is sufficient for POC - no persistent database required for payment history
+- **Payment records are permanently stored** and linked to user accounts (required for idea generation validation)
+- **Users must be authenticated** to make payments (depends on 003-discovery-ui-auth)
+- **Each payment is tied to a specific problem** (problem_id from Stage A)
 - The target audience is internal stakeholders evaluating the Toss Payments integration
 - Basic error handling is sufficient for POC purposes
 - Payment amounts can be fixed or simplified for demonstration
+
+### Dependencies
+
+- **003-discovery-ui-auth**: User authentication required before payment
+- **001-data-pipeline**: Problem data (document_summaries) for problem_id reference
 
 ### Out of Scope
 
 - Production Toss Payments integration with real transactions
 - PCI-DSS compliance implementation (Toss handles sensitive data)
 - Refund or cancellation workflows
-- Payment history persistence beyond user session
 - Multiple payment method support (focus on one Toss payment method for POC)
-- User authentication and account management
 - Detailed transaction reporting or analytics
 - Webhook signature verification (can be simplified for POC)
 - Retry logic for failed payments

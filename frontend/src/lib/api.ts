@@ -48,6 +48,7 @@ export interface Idea {
   market_signals: string[];
   confidence_score: number | null;
   is_bookmarked: boolean;
+  is_deleted: boolean;
   created_at: string;
 }
 
@@ -76,6 +77,13 @@ export interface SavedIdea {
 export interface IdeaWithContext extends Idea {
   problem_id: string;
   problem_title: string;
+  is_deleted: boolean;
+}
+
+export interface SoftDeleteResponse {
+  idea_id: string;
+  is_deleted: boolean;
+  message: string;
 }
 
 // ============================================
@@ -215,9 +223,10 @@ export const discoveryApi = {
 // ============================================
 
 export const ideasApi = {
-  generate: (problemId: string, feedback?: string) =>
+  generate: (problemId: string, paymentId?: string, feedback?: string) =>
     api.post<GenerationSession>('/api/ideas/generate', {
       problem_id: problemId,
+      payment_id: paymentId || null,
       feedback: feedback || null,
     }),
 
@@ -249,6 +258,17 @@ export const ideasApi = {
 
   getBookmarkedIdeas: (params?: { limit?: number; offset?: number }) =>
     api.get<{ items: IdeaWithContext[]; total: number }>('/api/ideas/bookmarked', { params }),
+
+  // My Ideas - all generated ideas
+  getMyIdeas: (params?: { bookmarked_only?: boolean; limit?: number; offset?: number }) =>
+    api.get<{ items: IdeaWithContext[]; total: number }>('/api/ideas/my-ideas', { params }),
+
+  // Soft delete/restore
+  deleteIdea: (ideaId: string) =>
+    api.delete<SoftDeleteResponse>(`/api/ideas/${ideaId}`),
+
+  restoreIdea: (ideaId: string) =>
+    api.post<SoftDeleteResponse>(`/api/ideas/${ideaId}/restore`),
 };
 
 // ============================================
@@ -256,7 +276,7 @@ export const ideasApi = {
 // ============================================
 
 export const paymentApi = {
-  confirmPayment: (data: { payment_key: string; order_id: string; amount: number }) =>
+  confirmPayment: (data: { payment_key: string; order_id: string; amount: number; problem_id: string }) =>
     api.post<PaymentConfirmResponse>('/api/payment/confirm', data),
 
   recordFailure: (data: { order_id: string; code: string; message: string }) =>
@@ -264,4 +284,7 @@ export const paymentApi = {
 
   getPaymentStatus: (orderId: string) =>
     api.get<PaymentStatusResponse>(`/api/payment/status/${orderId}`),
+
+  checkUnusedPayment: (problemId: string) =>
+    api.get<{ has_unused_payment: boolean; payment_id: string | null }>(`/api/payment/check-unused?problem_id=${problemId}`),
 };

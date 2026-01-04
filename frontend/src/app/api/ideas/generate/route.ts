@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { problem_id, feedback } = body;
+    const { problem_id, payment_id, feedback } = body;
 
     if (!problem_id) {
       return NextResponse.json(
@@ -33,28 +33,101 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for existing completed session (one-time generation)
-    const { data: existingSession } = await supabaseAdmin
-      .from('generation_sessions')
-      .select('id, status')
-      .eq('user_id', user.id)
-      .eq('problem_id', problem_id)
-      .eq('status', 'COMPLETED')
-      .single();
+    // Payment validation - find or validate unused payment for this problem
+    let validatedPaymentId: string | null = null;
 
-    if (existingSession) {
+    if (payment_id) {
+      // Validate the provided payment_id
+      const { data: payment, error: paymentError } = await supabaseAdmin
+        .from('payment_sessions')
+        .select('*')
+        .eq('id', payment_id)
+        .single();
+
+      if (paymentError || !payment) {
+        return NextResponse.json(
+          { detail: 'Payment not found' },
+          { status: 404 }
+        );
+      }
+
+      if (payment.user_id !== user.id) {
+        return NextResponse.json(
+          { detail: 'Payment does not belong to this user' },
+          { status: 403 }
+        );
+      }
+
+      if (payment.problem_id !== problem_id) {
+        return NextResponse.json(
+          { detail: 'Payment is for a different problem' },
+          { status: 400 }
+        );
+      }
+
+      if (payment.is_used) {
+        return NextResponse.json(
+          { detail: 'Payment has already been used for generation' },
+          { status: 409 }
+        );
+      }
+
+      if (payment.status !== 'SUCCESS') {
+        return NextResponse.json(
+          { detail: 'Payment is not successful' },
+          { status: 400 }
+        );
+      }
+
+      validatedPaymentId = payment.id;
+    } else {
+      // Find an unused payment for this user and problem
+      const { data: unusedPayment } = await supabaseAdmin
+        .from('payment_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('problem_id', problem_id)
+        .eq('status', 'SUCCESS')
+        .eq('is_used', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!unusedPayment) {
+        return NextResponse.json(
+          { detail: 'No unused payment found for this problem. Please complete payment first.' },
+          { status: 402 }
+        );
+      }
+
+      validatedPaymentId = unusedPayment.id;
+    }
+
+    // Mark payment as used before generation
+    const { error: updatePaymentError } = await supabaseAdmin
+      .from('payment_sessions')
+      .update({
+        is_used: true,
+        used_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', validatedPaymentId)
+      .eq('is_used', false); // Ensure atomicity
+
+    if (updatePaymentError) {
       return NextResponse.json(
-        { detail: 'Ideas already generated for this problem. Generation is one-time only.' },
+        { detail: 'Failed to reserve payment. It may have been used by another request.' },
         { status: 409 }
       );
     }
 
-    // Create generation session
+    // Create generation session with payment_id
     const { data: session, error: sessionError } = await supabaseAdmin
       .from('generation_sessions')
       .insert({
         user_id: user.id,
         problem_id,
+        payment_id: validatedPaymentId,
         feedback: feedback || null,
         status: 'GENERATING' as GenerationStatus,
       })
@@ -101,6 +174,7 @@ export async function POST(request: NextRequest) {
         market_signals: idea.market_signals,
         confidence_score: idea.confidence_score,
         is_bookmarked: false,
+        is_deleted: false,
       }));
 
       const { error: ideasError } = await supabaseAdmin

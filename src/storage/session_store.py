@@ -92,3 +92,77 @@ def cleanup_expired_sessions() -> int:
     if expired_ids:
         logger.info(f"Cleaned up {len(expired_ids)} expired payment sessions")
     return len(expired_ids)
+
+
+def get_unused_payment(user_id: str, problem_id: str) -> Optional[PaymentSession]:
+    """Get an unused successful payment for a user and problem.
+
+    Args:
+        user_id: User identifier
+        problem_id: Problem identifier
+
+    Returns:
+        Unused payment session if found, None otherwise
+    """
+    from src.models.payment import PaymentStatus
+
+    for session in _payment_sessions.values():
+        if (
+            session.user_id == user_id
+            and session.problem_id == problem_id
+            and session.status == PaymentStatus.SUCCESS
+            and not session.is_used
+        ):
+            logger.debug(
+                f"Found unused payment for user {user_id}, problem {problem_id}"
+            )
+            return session
+
+    logger.debug(f"No unused payment found for user {user_id}, problem {problem_id}")
+    return None
+
+
+def mark_payment_used(payment_id: str) -> bool:
+    """Mark a payment as used for idea generation.
+
+    Args:
+        payment_id: Payment session identifier
+
+    Returns:
+        True if payment was marked as used, False if not found or already used
+    """
+    session = _payment_sessions.get(payment_id)
+    if session and not session.is_used:
+        session.is_used = True
+        session.used_at = datetime.now(KST)
+        session.updated_at = datetime.now(KST)
+        _payment_sessions[payment_id] = session
+        logger.info(f"Marked payment as used: {payment_id}")
+        return True
+
+    if session and session.is_used:
+        logger.warning(f"Payment already used: {payment_id}")
+    else:
+        logger.warning(f"Payment not found: {payment_id}")
+    return False
+
+
+def get_payment_sessions_for_user(
+    user_id: str, problem_id: Optional[str] = None
+) -> list[PaymentSession]:
+    """Get all payment sessions for a user, optionally filtered by problem.
+
+    Args:
+        user_id: User identifier
+        problem_id: Optional problem identifier to filter by
+
+    Returns:
+        List of payment sessions
+    """
+    sessions = []
+    for session in _payment_sessions.values():
+        if session.user_id == user_id:
+            if problem_id is None or session.problem_id == problem_id:
+                sessions.append(session)
+
+    return sorted(sessions, key=lambda s: s.created_at, reverse=True)

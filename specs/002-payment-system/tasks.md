@@ -43,6 +43,16 @@
 - [X] T007 Create session storage module in src/storage/session_store.py with in-memory dict implementation (save_payment_session, get_payment_session, delete_payment_session, cleanup_expired_sessions functions)
 - [X] T008 Create PaymentService class in src/services/payment_service.py with Toss API client initialization and basic structure (httpx async client with Toss API base URL and auth headers)
 
+### **NEW: Payment-Generation Linking (Per Updated Spec)**
+
+- [ ] T008a **[NEW]** Add `problem_id` field to PaymentSession model in src/models/payment.py (FK to DocumentSummary)
+- [ ] T008b **[NEW]** Add `is_used` boolean field to PaymentSession model (DEFAULT FALSE)
+- [ ] T008c **[NEW]** Add `used_at` datetime field to PaymentSession model (nullable)
+- [ ] T008d **[NEW]** Create Supabase migration for payment_sessions table with new fields
+- [ ] T008e **[NEW]** Update payment storage to use PostgreSQL/Supabase instead of in-memory (persistent storage required)
+- [ ] T008f **[NEW]** Add `get_unused_payment(user_id, problem_id)` function to payment storage
+- [ ] T008g **[NEW]** Add `mark_payment_used(payment_id)` function to payment storage
+
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---
@@ -76,6 +86,7 @@
 - [X] T022 [P] [US1] Create PaymentButton component in frontend/src/components/payment/PaymentButton.tsx (triggers initiatePayment on click, redirects to checkout_url)
 - [X] T023 [P] [US1] Create PaymentStatus component in frontend/src/components/payment/PaymentStatus.tsx (displays payment status with transaction details or error message)
 - [X] T024 [P] [US1] Create checkout page in frontend/src/app/payment/checkout/page.tsx (displays payment amount, order name, PaymentButton)
+- [ ] T024a **[NEW]** [US1] Update checkout page to accept problem_id parameter and include in payment initiation request
 - [X] T025 [P] [US1] Create success page in frontend/src/app/payment/success/page.tsx (extracts query params, calls confirmPayment, displays PaymentStatus with success message)
 - [X] T026 [P] [US1] Create failure page in frontend/src/app/payment/failure/page.tsx (extracts error from query params, calls recordFailure, displays PaymentStatus with error message)
 - [X] T027 [US1] Add loading states and error handling to PaymentButton component (disable button during payment initiation, show spinner, handle API errors)

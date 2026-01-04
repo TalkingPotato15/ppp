@@ -20,8 +20,11 @@ from src.schemas.ideas import (
     BookmarkResponse,
     IdeaWithContextResponse,
     BookmarkedIdeasListResponse,
+    MyIdeasListResponse,
+    SoftDeleteResponse,
 )
 from src.storage import idea_store
+from src.storage.session_store import get_unused_payment, mark_payment_used
 from src.services.ai_agent import ai_agent
 from src.services.rag_service import (
     retrieve_similar_problems,
@@ -44,7 +47,8 @@ async def generate_ideas(
     """Generate business ideas for a problem.
 
     Creates a new generation session and uses the AI agent to generate ideas.
-    One-time generation: returns 409 Conflict if ideas already generated for this problem.
+    Payment validation: each generation requires an unused payment for the problem.
+    Multiple generations for same problem allowed with multiple payments.
     """
     # Get the problem details
     problem = await idea_store.get_problem(session, request.problem_id)
@@ -54,23 +58,55 @@ async def generate_ideas(
             detail="Problem not found",
         )
 
-    # Check for existing completed session (one-time generation enforcement)
-    existing_session = await idea_store.get_latest_session_for_problem(
-        session=session,
-        user_id=user.id,
-        problem_id=request.problem_id,
-    )
-    if existing_session and existing_session.status == GenerationStatus.COMPLETED:
+    # Payment validation - find unused payment for this user and problem
+    payment_id = request.payment_id
+    if payment_id:
+        # Use specified payment_id - validate it's unused and belongs to user
+        from src.storage.session_store import get_payment_session
+        payment = get_payment_session(payment_id)
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Payment not found",
+            )
+        if payment.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Payment does not belong to this user",
+            )
+        if payment.problem_id != request.problem_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment is for a different problem",
+            )
+        if payment.is_used:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Payment has already been used for generation",
+            )
+    else:
+        # Find an unused payment for this user and problem
+        payment = get_unused_payment(user.id, request.problem_id)
+        if not payment:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="No unused payment found for this problem. Please complete payment first.",
+            )
+        payment_id = payment.session_id
+
+    # Mark payment as used before generation
+    if not mark_payment_used(payment_id):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Ideas already generated for this problem. Generation is one-time only.",
+            detail="Failed to reserve payment. It may have been used by another request.",
         )
 
-    # Create generation session
+    # Create generation session with payment_id
     gen_session = await idea_store.create_session(
         session=session,
         user_id=user.id,
         problem_id=request.problem_id,
+        payment_id=payment_id,
         feedback=request.feedback,
     )
 
@@ -499,3 +535,117 @@ async def list_bookmarked_ideas(
         )
 
     return BookmarkedIdeasListResponse(items=items, total=total)
+
+
+# ============================================================================
+# My Ideas Endpoints (All Generated Ideas)
+# ============================================================================
+
+
+@router.get("/my-ideas", response_model=MyIdeasListResponse)
+async def list_my_ideas(
+    session: DbSession,
+    user: CurrentUser,
+    bookmarked_only: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """List all user's generated ideas (My Ideas page).
+
+    Returns all ideas from all generation sessions, excluding soft-deleted ones.
+    Supports filtering by bookmark status.
+    """
+    ideas, total = await idea_store.get_all_user_ideas(
+        session=session,
+        user_id=user.id,
+        include_deleted=False,
+        bookmarked_only=bookmarked_only,
+        limit=limit,
+        offset=offset,
+    )
+
+    # Build response with problem context
+    items = []
+    for idea in ideas:
+        gen_session = idea.session
+        problem = await idea_store.get_problem(session, gen_session.problem_id)
+
+        items.append(
+            IdeaWithContextResponse(
+                id=idea.id,
+                title=idea.title,
+                description=idea.description,
+                target_audience=idea.target_audience,
+                differentiators=idea.differentiators,
+                market_opportunity=idea.market_opportunity,
+                implementation_hints=idea.implementation_hints,
+                market_signals=idea.market_signals,
+                confidence_score=idea.confidence_score,
+                is_bookmarked=idea.is_bookmarked,
+                is_deleted=idea.is_deleted,
+                created_at=idea.created_at,
+                problem_id=gen_session.problem_id,
+                problem_title=problem.title if problem else "Unknown Problem",
+            )
+        )
+
+    return MyIdeasListResponse(items=items, total=total)
+
+
+@router.delete("/{idea_id}", response_model=SoftDeleteResponse)
+async def delete_idea(
+    idea_id: str,
+    session: DbSession,
+    user: CurrentUser,
+):
+    """Soft delete an idea (remove from My Ideas).
+
+    The idea is not permanently deleted, just hidden from the list.
+    Can be restored later if needed.
+    """
+    idea = await idea_store.soft_delete_idea(
+        session=session,
+        idea_id=idea_id,
+        user_id=user.id,
+    )
+
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Idea not found or access denied",
+        )
+
+    return SoftDeleteResponse(
+        idea_id=idea.id,
+        is_deleted=True,
+        message="Idea removed from My Ideas",
+    )
+
+
+@router.post("/{idea_id}/restore", response_model=SoftDeleteResponse)
+async def restore_idea(
+    idea_id: str,
+    session: DbSession,
+    user: CurrentUser,
+):
+    """Restore a soft-deleted idea.
+
+    Returns the idea back to My Ideas list.
+    """
+    idea = await idea_store.restore_idea(
+        session=session,
+        idea_id=idea_id,
+        user_id=user.id,
+    )
+
+    if not idea:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Idea not found or access denied",
+        )
+
+    return SoftDeleteResponse(
+        idea_id=idea.id,
+        is_deleted=False,
+        message="Idea restored to My Ideas",
+    )

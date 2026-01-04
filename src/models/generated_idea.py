@@ -46,6 +46,9 @@ class GeneratedIdea(Base):
     is_bookmarked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )  # Whether user has bookmarked this idea
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )  # Soft delete flag (user can remove from My Ideas)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )

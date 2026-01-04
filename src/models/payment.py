@@ -26,6 +26,7 @@ class PaymentSession(BaseModel):
 
     session_id: str = Field(..., description="Unique session identifier (UUID)")
     user_id: str = Field(..., description="User who initiated the payment")
+    problem_id: str = Field(..., description="Problem this payment is for (FK to DocumentSummary)")
     order_id: str = Field(..., description="Internal order identifier (UUID)")
     payment_key: Optional[str] = Field(None, description="Toss Payments payment key")
     amount: int = Field(..., description="Payment amount in KRW (smallest unit)")
@@ -35,6 +36,12 @@ class PaymentSession(BaseModel):
     )
     status: PaymentStatus = Field(
         default=PaymentStatus.PENDING, description="Current payment state"
+    )
+    is_used: bool = Field(
+        default=False, description="Whether this payment has been used for idea generation"
+    )
+    used_at: Optional[datetime] = Field(
+        None, description="Timestamp when payment was used for generation"
     )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(KST), description="Payment initiation time"

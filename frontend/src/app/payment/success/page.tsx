@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PaymentStatus } from '@/components/payment/PaymentStatus';
 import { PaymentStatusResponse } from '@/types/payment';
+import { paymentApi } from '@/lib/api';
 
 function LoadingSpinner() {
   return (
@@ -61,8 +62,25 @@ function PaymentSuccessContent() {
         const customerDataStr = sessionStorage.getItem(`payment_${orderId}`);
         const customerData = customerDataStr ? JSON.parse(customerDataStr) : null;
 
-        // For POC: Trust Toss SDK redirect (it only redirects to success if payment succeeded)
-        // In production, you would verify the payment with Toss API here
+        if (!customerData?.problemId) {
+          setError('Missing problem ID for payment');
+          setIsLoading(false);
+          return;
+        }
+
+        // Confirm payment with backend API (stores in payment_sessions table)
+        const response = await paymentApi.confirmPayment({
+          payment_key: paymentKey,
+          order_id: orderId,
+          amount: parseInt(amount, 10),
+          problem_id: customerData.problemId,
+        });
+
+        if (response.data.status !== 'SUCCESS') {
+          setError(response.data.error_message || 'Payment confirmation failed');
+          setIsLoading(false);
+          return;
+        }
 
         // Create payment status response with customer data
         const paymentData: PaymentStatusResponse = {
@@ -72,7 +90,7 @@ function PaymentSuccessContent() {
           order_name: 'Stage B Idea Generation',
           customer_data: customerData,
           created_at: new Date().toISOString(),
-          approved_at: new Date().toISOString(),
+          approved_at: response.data.approved_at || new Date().toISOString(),
         };
         setPayment(paymentData);
 
@@ -81,15 +99,12 @@ function PaymentSuccessContent() {
           sessionStorage.removeItem(`payment_${orderId}`);
         }
 
-        // If payment successful and has problemId, redirect to stage-b
-        if (customerData?.problemId) {
-          // Small delay to show success state, then redirect
-          setTimeout(() => {
-            router.push(`/stage-b/${customerData.problemId}`);
-          }, 2000);
-        }
+        // Payment successful, redirect to stage-b for idea generation
+        setTimeout(() => {
+          router.push(`/stage-b/${customerData.problemId}`);
+        }, 2000);
       } catch (err: any) {
-        const errorMessage = err.message || 'Failed to process payment';
+        const errorMessage = err.response?.data?.detail || err.message || 'Failed to process payment';
         setError(errorMessage);
       } finally {
         setIsLoading(false);

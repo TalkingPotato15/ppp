@@ -13,8 +13,11 @@ class GenerateIdeasRequest(BaseModel):
     """Request schema for generating ideas."""
 
     problem_id: str = Field(..., description="ID of the problem to generate ideas for")
+    payment_id: Optional[str] = Field(
+        None, description="Payment session ID (required for paid generation)"
+    )
     feedback: Optional[str] = Field(
-        None, max_length=1000, description="Optional feedback to guide regeneration"
+        None, max_length=1000, description="Optional feedback to guide generation"
     )
 
 
@@ -50,6 +53,7 @@ class IdeaResponse(BaseModel):
         None, ge=0.0, le=1.0, description="0.0-1.0 score based on data grounding"
     )
     is_bookmarked: bool = Field(default=False, description="Whether user has bookmarked this idea")
+    is_deleted: bool = Field(default=False, description="Whether idea is soft-deleted")
     created_at: datetime
 
     class Config:
@@ -138,6 +142,7 @@ class IdeaWithContextResponse(BaseModel):
     market_signals: Optional[list[str]] = None
     confidence_score: Optional[float] = None
     is_bookmarked: bool
+    is_deleted: bool = False
     created_at: datetime
     problem_id: str
     problem_title: str
@@ -153,3 +158,18 @@ class BookmarkedIdeasListResponse(BaseModel):
 
     items: list[IdeaWithContextResponse]
     total: int
+
+
+class MyIdeasListResponse(BaseModel):
+    """Response schema for list of all user's ideas (My Ideas page)."""
+
+    items: list[IdeaWithContextResponse]
+    total: int
+
+
+class SoftDeleteResponse(BaseModel):
+    """Response schema for soft delete operation."""
+
+    idea_id: str
+    is_deleted: bool
+    message: str
