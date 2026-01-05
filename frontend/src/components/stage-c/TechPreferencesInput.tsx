@@ -178,35 +178,35 @@ export function TechPreferencesInput({ value, onChange }: TechPreferencesInputPr
     <div className="space-y-6">
       <div>
         <h3 className="text-sm font-medium text-gray-700 mb-4">
-          기술 스택 선호도 <span className="text-gray-400">(선택사항)</span>
+          Tech Stack Preferences <span className="text-gray-400">(Optional)</span>
         </h3>
         <p className="text-sm text-gray-500 mb-4">
-          선호하는 기술이 있다면 입력해주세요. 입력하지 않으면 AI가 최적의 기술 스택을 추천합니다.
+          Please enter your preferred technologies. If left blank, AI will recommend the optimal stack.
         </p>
       </div>
 
       <ChipInput
-        label="프로그래밍 언어"
+        label="Programming Languages"
         suggestions={POPULAR_LANGUAGES}
         values={selectedLanguages}
         onChange={updateLanguages}
-        placeholder="예: TypeScript, Python"
+        placeholder="e.g., TypeScript, Python"
       />
 
       <ChipInput
-        label="프레임워크"
+        label="Frameworks"
         suggestions={compatibleFrameworks}
         values={value.frameworks || []}
         onChange={(values) => updatePreferences('frameworks', values)}
-        placeholder={selectedLanguages.length > 0 ? "선택한 언어와 호환되는 프레임워크" : "언어를 먼저 선택하세요"}
+        placeholder={selectedLanguages.length > 0 ? "Frameworks compatible with selected languages" : "Select a language first"}
       />
 
       <ChipInput
-        label="플랫폼 / 인프라"
+        label="Platform / Infrastructure"
         suggestions={POPULAR_PLATFORMS}
         values={value.platforms || []}
         onChange={(values) => updatePreferences('platforms', values)}
-        placeholder="예: Vercel, AWS"
+        placeholder="e.g., Vercel, AWS"
       />
     </div>
   );

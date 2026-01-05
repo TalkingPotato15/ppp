@@ -10,10 +10,10 @@ interface BudgetSelectorProps {
 }
 
 const BUDGET_OPTIONS: Array<{ range: BudgetRange; label: string }> = [
-  { range: 'UNDER_10M', label: '1,000만원 미만' },
-  { range: '10M_TO_50M', label: '1,000만원 ~ 5,000만원' },
-  { range: '50M_TO_200M', label: '5,000만원 ~ 2억원' },
-  { range: 'OVER_200M', label: '2억원 이상' },
+  { range: 'UNDER_10M', label: 'Under ₩10M' },
+  { range: '10M_TO_50M', label: '₩10M ~ ₩50M' },
+  { range: '50M_TO_200M', label: '₩50M ~ ₩200M' },
+  { range: 'OVER_200M', label: 'Over ₩200M' },
 ];
 
 export function BudgetSelector({ value, onChange, error }: BudgetSelectorProps) {
@@ -40,13 +40,13 @@ export function BudgetSelector({ value, onChange, error }: BudgetSelectorProps) 
 
   const formatAmount = (amount: number | undefined): string => {
     if (!amount) return '';
-    return amount.toLocaleString('ko-KR');
+    return amount.toLocaleString();
   };
 
   return (
     <div className="space-y-4">
       <label className="block text-sm font-medium text-gray-700">
-        예산 범위 <span className="text-red-500">*</span>
+        Budget Range <span className="text-red-500">*</span>
       </label>
 
       <div className="grid grid-cols-2 gap-3">
@@ -75,7 +75,7 @@ export function BudgetSelector({ value, onChange, error }: BudgetSelectorProps) 
           className="h-4 w-4 text-blue-600 rounded border-gray-300"
         />
         <label htmlFor="showSpecificAmount" className="text-sm text-gray-600">
-          구체적인 예산 금액 입력
+          Enter specific budget amount
         </label>
       </div>
 
@@ -85,11 +85,11 @@ export function BudgetSelector({ value, onChange, error }: BudgetSelectorProps) 
             type="text"
             value={formatAmount(value.specificAmount)}
             onChange={(e) => handleSpecificAmountChange(e.target.value)}
-            placeholder="예: 30,000,000"
+            placeholder="e.g. 30,000,000"
             className="w-full p-3 border border-gray-200 rounded-lg pr-12"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-            원
+            KRW
           </span>
         </div>
       )}

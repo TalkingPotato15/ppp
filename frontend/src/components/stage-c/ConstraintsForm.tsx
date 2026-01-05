@@ -22,10 +22,10 @@ interface ConstraintsFormProps {
 type FormStep = 'budget' | 'team' | 'timeline' | 'preferences';
 
 const STEPS: Array<{ key: FormStep; label: string }> = [
-  { key: 'budget', label: '예산' },
-  { key: 'team', label: '팀 구성' },
-  { key: 'timeline', label: '일정' },
-  { key: 'preferences', label: '기술 선호' },
+  { key: 'budget', label: 'Budget' },
+  { key: 'team', label: 'Team' },
+  { key: 'timeline', label: 'Timeline' },
+  { key: 'preferences', label: 'Tech Prefs' },
 ];
 
 export function ConstraintsForm({
@@ -65,22 +65,22 @@ export function ConstraintsForm({
     switch (currentStep) {
       case 'budget':
         if (!constraints.budget.range) {
-          stepErrors.budget = '예산 범위를 선택해주세요.';
+          stepErrors.budget = 'Please select a budget range.';
         }
         break;
       case 'team':
         if (constraints.team.size < 1) {
-          stepErrors.team = '팀 규모는 최소 1명 이상이어야 합니다.';
+          stepErrors.team = 'Team size must be at least 1 person.';
         }
         const { junior, middle, senior } = constraints.team.composition;
         const total = junior + middle + senior;
         if (total !== constraints.team.size) {
-          stepErrors.team = `팀 구성원 합계(${total})가 팀 규모(${constraints.team.size})와 일치해야 합니다.`;
+          stepErrors.team = `Total team members (${total}) must match team size (${constraints.team.size}).`;
         }
         break;
       case 'timeline':
         if (!constraints.timeline) {
-          stepErrors.timeline = '개발 기간을 선택해주세요.';
+          stepErrors.timeline = 'Please select a development timeline.';
         }
         break;
       // preferences step has no required fields
@@ -255,7 +255,7 @@ export function ConstraintsForm({
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            이전
+            Previous
           </button>
 
           {currentStepIndex < STEPS.length - 1 ? (
@@ -264,7 +264,7 @@ export function ConstraintsForm({
               onClick={goToNextStep}
               className="px-6 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
             >
-              다음
+              Next
             </button>
           ) : (
             <button
@@ -298,10 +298,10 @@ export function ConstraintsForm({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  생성 중...
+                  Generating...
                 </span>
               ) : (
-                '사양서 생성하기'
+                'Generate Spec'
               )}
             </button>
           )}

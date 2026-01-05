@@ -16,26 +16,26 @@ import type {
 
 describe('document-exporter', () => {
   const mockPRD: PRDDocument = {
-    title: '테스트 제품',
-    overview: '이것은 테스트 제품입니다.',
+    title: 'Test Product',
+    overview: 'This is a test product.',
     requirements: [
       {
         id: 'REQ-001',
         priority: 'P0',
-        description: '사용자 인증',
-        acceptanceCriteria: ['이메일 로그인', 'OAuth 지원'],
+        description: 'User Authentication',
+        acceptanceCriteria: ['Email login', 'OAuth support'],
       },
       {
         id: 'REQ-002',
         priority: 'P1',
-        description: '대시보드',
-        acceptanceCriteria: ['데이터 시각화'],
+        description: 'Dashboard',
+        acceptanceCriteria: ['Data Visualization'],
       },
     ],
-    userStories: ['사용자로서 로그인할 수 있다', '사용자로서 대시보드를 볼 수 있다'],
+    userStories: ['As a user I can login', 'As a user I can view dashboard'],
     scope: {
-      included: ['사용자 인증', '대시보드'],
-      excluded: ['관리자 기능', '다국어'],
+      included: ['User Authentication', 'Dashboard'],
+      excluded: ['Admin features', 'Multi-language'],
     },
   };
 
@@ -43,10 +43,10 @@ describe('document-exporter', () => {
     diagramCode: 'flowchart TD\n    A --> B',
     components: [
       {
-        name: '프론트엔드',
-        description: 'UI 레이어',
+        name: 'Frontend',
+        description: 'UI Layer',
         technology: 'Next.js',
-        responsibilities: ['렌더링', '라우팅'],
+        responsibilities: ['Rendering', 'Routing'],
       },
     ],
     integrations: ['Supabase', 'Vercel'],
@@ -55,14 +55,14 @@ describe('document-exporter', () => {
   const mockRoadmap: MVPRoadmap = {
     phases: [
       {
-        name: 'MVP 개발',
-        duration: '4주',
-        milestones: ['프로젝트 셋업', '핵심 기능'],
-        deliverables: ['동작하는 앱'],
+        name: 'MVP Development',
+        duration: '4 weeks',
+        milestones: ['Project Setup', 'Core Features'],
+        deliverables: ['Working App'],
         dependencies: [],
       },
     ],
-    totalDuration: '4주',
+    totalDuration: '4 weeks',
   };
 
   const mockTechStack: TechStackRecommendation[] = [
@@ -70,12 +70,12 @@ describe('document-exporter', () => {
       category: 'frontend',
       recommended: 'Next.js',
       alternatives: ['React', 'Vue'],
-      rationale: '빠른 개발',
-      estimatedCost: '무료',
+      rationale: 'Fast development',
+      estimatedCost: 'Free',
       constraintAlignment: {
-        budget: '무료',
-        team: '러닝커브 낮음',
-        timeline: '빠른 개발',
+        budget: 'Free',
+        team: 'Low learning curve',
+        timeline: 'Fast development',
       },
     },
   ];
@@ -86,7 +86,7 @@ describe('document-exporter', () => {
     ideaId: 'idea-1',
     versionNumber: 1,
     constraintsSnapshot: {
-      budget: { range: '10M_TO_50M', displayText: '1,000만원 ~ 5,000만원' },
+      budget: { range: '10M_TO_50M', displayText: '₩10M ~ ₩50M' },
       team: { size: 3, composition: { junior: 1, middle: 1, senior: 1 } },
       timeline: '3_TO_6_MONTHS',
     },
@@ -102,35 +102,35 @@ describe('document-exporter', () => {
     it('should generate valid markdown with title', () => {
       const markdown = generatePRDMarkdown(mockPRD);
 
-      expect(markdown).toContain('# 테스트 제품');
-      expect(markdown).toContain('## 개요');
-      expect(markdown).toContain('이것은 테스트 제품입니다.');
+      expect(markdown).toContain('# Test Product');
+      expect(markdown).toContain('## Overview');
+      expect(markdown).toContain('This is a test product.');
     });
 
     it('should include requirements table', () => {
       const markdown = generatePRDMarkdown(mockPRD);
 
-      expect(markdown).toContain('## 요구사항');
-      expect(markdown).toContain('| ID | 우선순위 | 설명 | 수락 기준 |');
+      expect(markdown).toContain('## Requirements');
+      expect(markdown).toContain('| ID | Priority | Description | Acceptance Criteria |');
       expect(markdown).toContain('REQ-001');
       expect(markdown).toContain('P0');
-      expect(markdown).toContain('사용자 인증');
+      expect(markdown).toContain('User Authentication');
     });
 
     it('should include user stories', () => {
       const markdown = generatePRDMarkdown(mockPRD);
 
-      expect(markdown).toContain('## 사용자 스토리');
-      expect(markdown).toContain('1. 사용자로서 로그인할 수 있다');
+      expect(markdown).toContain('## User Stories');
+      expect(markdown).toContain('1. As a user I can login');
     });
 
     it('should include scope sections', () => {
       const markdown = generatePRDMarkdown(mockPRD);
 
-      expect(markdown).toContain('### 포함');
-      expect(markdown).toContain('- 사용자 인증');
-      expect(markdown).toContain('### 제외');
-      expect(markdown).toContain('- 관리자 기능');
+      expect(markdown).toContain('### Included');
+      expect(markdown).toContain('- User Authentication');
+      expect(markdown).toContain('### Excluded');
+      expect(markdown).toContain('- Admin features');
     });
   });
 
@@ -146,15 +146,15 @@ describe('document-exporter', () => {
     it('should include components', () => {
       const markdown = generateArchitectureMarkdown(mockArchitecture);
 
-      expect(markdown).toContain('## 컴포넌트 설명');
-      expect(markdown).toContain('### 프론트엔드');
-      expect(markdown).toContain('**기술**: Next.js');
+      expect(markdown).toContain('## Component Details');
+      expect(markdown).toContain('### Frontend');
+      expect(markdown).toContain('**Technology**: Next.js');
     });
 
     it('should include integrations', () => {
       const markdown = generateArchitectureMarkdown(mockArchitecture);
 
-      expect(markdown).toContain('## 외부 통합');
+      expect(markdown).toContain('## External Integrations');
       expect(markdown).toContain('- Supabase');
       expect(markdown).toContain('- Vercel');
     });
@@ -164,15 +164,15 @@ describe('document-exporter', () => {
     it('should include total duration', () => {
       const markdown = generateRoadmapMarkdown(mockRoadmap);
 
-      expect(markdown).toContain('**총 소요 기간**: 4주');
+      expect(markdown).toContain('**Total Duration**: 4 weeks');
     });
 
     it('should include phases', () => {
       const markdown = generateRoadmapMarkdown(mockRoadmap);
 
-      expect(markdown).toContain('### MVP 개발');
-      expect(markdown).toContain('**기간**: 4주');
-      expect(markdown).toContain('- 프로젝트 셋업');
+      expect(markdown).toContain('### MVP Development');
+      expect(markdown).toContain('**Duration**: 4 weeks');
+      expect(markdown).toContain('- Project Setup');
     });
   });
 
@@ -180,23 +180,23 @@ describe('document-exporter', () => {
     it('should include category headers', () => {
       const markdown = generateTechStackMarkdown(mockTechStack);
 
-      expect(markdown).toContain('### 프론트엔드');
+      expect(markdown).toContain('### Frontend');
     });
 
     it('should include recommendations and rationale', () => {
       const markdown = generateTechStackMarkdown(mockTechStack);
 
-      expect(markdown).toContain('**추천**: Next.js');
-      expect(markdown).toContain('**대안**: React, Vue');
-      expect(markdown).toContain('**선택 근거**: 빠른 개발');
+      expect(markdown).toContain('**Recommended**: Next.js');
+      expect(markdown).toContain('**Alternatives**: React, Vue');
+      expect(markdown).toContain('**Rationale**: Fast development');
     });
 
     it('should include constraint alignment', () => {
       const markdown = generateTechStackMarkdown(mockTechStack);
 
-      expect(markdown).toContain('**제약조건 적합성**');
-      expect(markdown).toContain('- 예산: 무료');
-      expect(markdown).toContain('- 팀: 러닝커브 낮음');
+      expect(markdown).toContain('**Constraint Alignment**');
+      expect(markdown).toContain('- Budget: Free');
+      expect(markdown).toContain('- Team: Low learning curve');
     });
   });
 
@@ -204,23 +204,23 @@ describe('document-exporter', () => {
     it('should include title and version', () => {
       const markdown = generateReadmeMarkdown(mockSpecification);
 
-      expect(markdown).toContain('# 테스트 제품');
-      expect(markdown).toContain('**버전**: v1');
+      expect(markdown).toContain('# Test Product');
+      expect(markdown).toContain('**Version**: v1');
     });
 
     it('should include document links', () => {
       const markdown = generateReadmeMarkdown(mockSpecification);
 
-      expect(markdown).toContain('[PRD (제품 요구사항)](./prd.md)');
-      expect(markdown).toContain('[시스템 아키텍처](./architecture.md)');
+      expect(markdown).toContain('[PRD (Product Requirements)](./prd.md)');
+      expect(markdown).toContain('[System Architecture](./architecture.md)');
     });
 
     it('should include constraints summary', () => {
       const markdown = generateReadmeMarkdown(mockSpecification);
 
-      expect(markdown).toContain('## 제약조건 요약');
-      expect(markdown).toContain('1,000만원 ~ 5,000만원');
-      expect(markdown).toContain('3명');
+      expect(markdown).toContain('## Constraints Summary');
+      expect(markdown).toContain('₩10M ~ ₩50M');
+      expect(markdown).toContain('3 people');
     });
   });
 

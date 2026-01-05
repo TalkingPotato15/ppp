@@ -28,7 +28,7 @@ export function QuotaDisplay({
           ))}
         </div>
         <span className="text-xs text-gray-500">
-          {remainingCount}회 남음
+          {remainingCount} left
         </span>
       </div>
     );
@@ -37,9 +37,9 @@ export function QuotaDisplay({
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">재생성 가능 횟수</span>
+        <span className="text-sm font-medium text-gray-700">Regenerations Available</span>
         <span className="text-sm text-gray-500">
-          {usedCount} / {maxCount} 사용
+          {usedCount} / {maxCount} Used
         </span>
       </div>
 
@@ -66,11 +66,11 @@ export function QuotaDisplay({
           : 'text-gray-500'
       }`}>
         {remainingCount === 0 ? (
-          '재생성 횟수를 모두 사용했습니다.'
+          'You have used all regenerations.'
         ) : remainingCount === 1 ? (
-          '마지막 1회 재생성이 남았습니다.'
+          'One regeneration remaining.'
         ) : (
-          `${remainingCount}회 재생성 가능합니다.`
+          `${remainingCount} regenerations available.`
         )}
       </p>
     </div>

@@ -26,9 +26,9 @@ describe('TeamCompositionInput', () => {
   it('should render composition counters', () => {
     render(<TeamCompositionInput value={defaultTeam} onChange={mockOnChange} />);
 
-    expect(screen.getByText('주니어')).toBeInTheDocument();
-    expect(screen.getByText('미들')).toBeInTheDocument();
-    expect(screen.getByText('시니어')).toBeInTheDocument();
+    expect(screen.getByText('Junior')).toBeInTheDocument();
+    expect(screen.getByText('Middle')).toBeInTheDocument();
+    expect(screen.getByText('Senior')).toBeInTheDocument();
   });
 
   it('should call onChange when slider value changes', () => {
@@ -97,12 +97,12 @@ describe('TeamCompositionInput', () => {
       <TeamCompositionInput
         value={mismatchedTeam}
         onChange={mockOnChange}
-        error="팀 구성원 합계가 팀 규모와 일치하지 않습니다"
+        error="Total team members do not match team size"
       />
     );
 
     // Multiple elements match - use getAllByText and check length
-    const matchingElements = screen.getAllByText(/일치하지 않습니다/);
+    const matchingElements = screen.getAllByText(/do not match/);
     expect(matchingElements.length).toBeGreaterThan(0);
   });
 
@@ -110,7 +110,7 @@ describe('TeamCompositionInput', () => {
     render(<TeamCompositionInput value={defaultTeam} onChange={mockOnChange} />);
 
     // Check that each level shows the count
-    const juniorCounter = screen.getByText('주니어').closest('div');
+    const juniorCounter = screen.getByText('Junior').closest('div');
     expect(juniorCounter?.textContent).toContain('1');
   });
 });

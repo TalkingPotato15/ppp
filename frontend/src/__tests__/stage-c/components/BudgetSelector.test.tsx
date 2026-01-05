@@ -6,7 +6,7 @@ import type { Budget } from '@/types/stage-c';
 describe('BudgetSelector', () => {
   const defaultBudget: Budget = {
     range: '10M_TO_50M',
-    displayText: '1,000만원 ~ 5,000만원',
+    displayText: '₩10M ~ ₩50M',
   };
 
   const mockOnChange = jest.fn();
@@ -18,27 +18,27 @@ describe('BudgetSelector', () => {
   it('should render all budget options', () => {
     render(<BudgetSelector value={defaultBudget} onChange={mockOnChange} />);
 
-    expect(screen.getByText('1,000만원 미만')).toBeInTheDocument();
-    expect(screen.getByText('1,000만원 ~ 5,000만원')).toBeInTheDocument();
-    expect(screen.getByText('5,000만원 ~ 2억원')).toBeInTheDocument();
-    expect(screen.getByText('2억원 이상')).toBeInTheDocument();
+    expect(screen.getByText('Under ₩10M')).toBeInTheDocument();
+    expect(screen.getByText('₩10M ~ ₩50M')).toBeInTheDocument();
+    expect(screen.getByText('₩50M ~ ₩200M')).toBeInTheDocument();
+    expect(screen.getByText('Over ₩200M')).toBeInTheDocument();
   });
 
   it('should highlight the selected option', () => {
     render(<BudgetSelector value={defaultBudget} onChange={mockOnChange} />);
 
-    const selectedButton = screen.getByText('1,000만원 ~ 5,000만원').closest('button');
+    const selectedButton = screen.getByText('₩10M ~ ₩50M').closest('button');
     expect(selectedButton).toHaveClass('border-blue-500');
   });
 
   it('should call onChange when a different option is selected', () => {
     render(<BudgetSelector value={defaultBudget} onChange={mockOnChange} />);
 
-    fireEvent.click(screen.getByText('2억원 이상'));
+    fireEvent.click(screen.getByText('Over ₩200M'));
 
     expect(mockOnChange).toHaveBeenCalledWith({
       range: 'OVER_200M',
-      displayText: '2억원 이상',
+      displayText: 'Over ₩200M',
       specificAmount: undefined,
     });
   });
@@ -48,7 +48,7 @@ describe('BudgetSelector', () => {
 
     expect(screen.queryByPlaceholderText(/30,000,000/)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText('구체적인 예산 금액 입력'));
+    fireEvent.click(screen.getByLabelText('Enter specific budget amount'));
 
     expect(screen.getByPlaceholderText(/30,000,000/)).toBeInTheDocument();
   });
@@ -72,12 +72,12 @@ describe('BudgetSelector', () => {
       <BudgetSelector
         value={defaultBudget}
         onChange={mockOnChange}
-        error="예산을 선택해주세요"
+        error="Please select a budget range"
       />
     );
 
-    expect(screen.getByText('예산을 선택해주세요')).toBeInTheDocument();
-    expect(screen.getByText('예산을 선택해주세요')).toHaveClass('text-red-500');
+    expect(screen.getByText('Please select a budget range')).toBeInTheDocument();
+    expect(screen.getByText('Please select a budget range')).toHaveClass('text-red-500');
   });
 
   it('should show required indicator', () => {

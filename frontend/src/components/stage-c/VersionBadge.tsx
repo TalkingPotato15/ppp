@@ -36,7 +36,7 @@ export function VersionBadge({
             ${sizeClasses[size]}
           `}
         >
-          최신
+          Latest
         </span>
       )}
     </span>
