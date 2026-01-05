@@ -43,7 +43,7 @@ export function ExportButton({ specification, ideaId }: ExportButtonProps) {
       }
     } catch (error) {
       console.error(`Failed to export as ${format}:`, error);
-      alert(`내보내기에 실패했습니다. 다시 시도해주세요.`);
+      alert(`Export failed. Please try again.`);
     } finally {
       setIsExporting(null);
       setIsOpen(false);
@@ -65,7 +65,7 @@ export function ExportButton({ specification, ideaId }: ExportButtonProps) {
             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
           />
         </svg>
-        내보내기
+        Export
         <svg
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -116,8 +116,8 @@ export function ExportButton({ specification, ideaId }: ExportButtonProps) {
               </svg>
             )}
             <div>
-              <p className="font-medium text-gray-900">PDF로 다운로드</p>
-              <p className="text-xs text-gray-500">모든 문서를 단일 PDF로</p>
+              <p className="font-medium text-gray-900">Download as PDF</p>
+              <p className="text-xs text-gray-500">All documents as a single PDF</p>
             </div>
           </button>
 
@@ -160,8 +160,8 @@ export function ExportButton({ specification, ideaId }: ExportButtonProps) {
               </svg>
             )}
             <div>
-              <p className="font-medium text-gray-900">Markdown으로 다운로드</p>
-              <p className="text-xs text-gray-500">개별 .md 파일 ZIP 압축</p>
+              <p className="font-medium text-gray-900">Download as Markdown</p>
+              <p className="text-xs text-gray-500">Individual .md files as ZIP</p>
             </div>
           </button>
         </div>

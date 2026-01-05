@@ -16,7 +16,7 @@ export function VersionHistoryList({
   if (specifications.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        아직 생성된 사양서가 없습니다.
+        No specifications generated yet.
       </div>
     );
   }
@@ -32,7 +32,7 @@ export function VersionHistoryList({
         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        버전 히스토리
+        Version History
       </h3>
 
       <div className="space-y-1">
@@ -65,15 +65,15 @@ export function VersionHistoryList({
                 </div>
                 <div>
                   <p className={`text-sm font-medium ${isCurrentVersion ? 'text-blue-700' : 'text-gray-900'}`}>
-                    버전 {spec.versionNumber}
+                    Version {spec.versionNumber}
                     {spec.versionNumber === sortedSpecs[0].versionNumber && (
                       <span className="ml-2 px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">
-                        최신
+                        Latest
                       </span>
                     )}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {createdDate.toLocaleDateString('ko-KR', {
+                    {createdDate.toLocaleDateString(undefined, {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
@@ -96,10 +96,10 @@ export function VersionHistoryList({
                   }`}
                 >
                   {spec.status === 'completed'
-                    ? '완료'
+                    ? 'Completed'
                     : spec.status === 'generating'
-                    ? '생성 중'
-                    : '실패'}
+                    ? 'Generating'
+                    : 'Failed'}
                 </span>
 
                 {/* Arrow indicator for current */}
@@ -117,7 +117,7 @@ export function VersionHistoryList({
       {/* Summary */}
       <div className="pt-3 border-t border-gray-100 mt-3">
         <p className="text-xs text-gray-400">
-          총 {specifications.length}개 버전
+          Total {specifications.length} versions
         </p>
       </div>
     </div>

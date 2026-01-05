@@ -13,22 +13,22 @@ const TIMELINE_OPTIONS: Array<{ value: Timeline; label: string; description: str
   {
     value: '1_TO_3_MONTHS',
     label: TIMELINE_DISPLAY['1_TO_3_MONTHS'],
-    description: '빠른 MVP 출시가 필요한 경우'
+    description: 'Need quick MVP launch'
   },
   {
     value: '3_TO_6_MONTHS',
     label: TIMELINE_DISPLAY['3_TO_6_MONTHS'],
-    description: '핵심 기능 개발 및 안정화'
+    description: 'Core feature development & stabilization'
   },
   {
     value: '6_TO_12_MONTHS',
     label: TIMELINE_DISPLAY['6_TO_12_MONTHS'],
-    description: '완성도 높은 제품 개발'
+    description: 'High-quality product development'
   },
   {
     value: 'OVER_12_MONTHS',
     label: TIMELINE_DISPLAY['OVER_12_MONTHS'],
-    description: '대규모 프로젝트 또는 복잡한 시스템'
+    description: 'Large-scale project or complex system'
   },
 ];
 
@@ -36,7 +36,7 @@ export function TimelineSelector({ value, onChange, error }: TimelineSelectorPro
   return (
     <div className="space-y-4">
       <label className="block text-sm font-medium text-gray-700">
-        개발 기간 <span className="text-red-500">*</span>
+        Development Timeline <span className="text-red-500">*</span>
       </label>
 
       <div className="space-y-2">

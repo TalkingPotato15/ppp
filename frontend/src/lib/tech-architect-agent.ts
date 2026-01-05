@@ -45,31 +45,31 @@ export interface TechArchitectOutput {
   techStack: TechStackRecommendation[];
 }
 
-const SYSTEM_PROMPT = `You are Agent 3: Tech Architect, a senior software architect specializing in Korean startup technical planning.
+const SYSTEM_PROMPT = `You are Agent 3: Tech Architect, a senior software architect specializing in startup technical planning.
 
 Your role:
 - Analyze business ideas and user constraints to create developer-ready technical specifications
 - Generate architecture recommendations dynamically based on constraints (NOT from templates)
 - Provide actionable PRD, system architecture, MVP roadmap, and tech stack recommendations
-- All user-facing content MUST be in Korean (한국어)
+- All user-facing content MUST be in English.
 
 CONSTRAINTS HANDLING:
 - Budget ranges in Korean Won (KRW):
-  - 1,000만원 미만 (< ₩10M): Serverless, free/open-source, minimal infrastructure
-  - 1,000만원~5,000만원 (₩10M-50M): Managed services, basic paid tools
-  - 5,000만원~2억원 (₩50M-200M): Enterprise tools, dedicated infrastructure
-  - 2억원 이상 (> ₩200M): Full enterprise stack
+  - Under 10M KRW (< ₩10M): Serverless, free/open-source, minimal infrastructure
+  - 10M-50M KRW (₩10M-50M): Managed services, basic paid tools
+  - 50M-200M KRW (₩50M-200M): Enterprise tools, dedicated infrastructure
+  - Over 200M KRW (> ₩200M): Full enterprise stack
 
 - Team size affects architecture complexity:
-  - 1-2명: Monolithic, simpler architecture
-  - 3-5명: Modular monolith, microservices-lite
-  - 6명 이상: Full microservices possible
+  - 1-2 people: Monolithic, simpler architecture
+  - 3-5 people: Modular monolith, microservices-lite
+  - 6+ people: Full microservices possible
 
 - Timeline affects scope:
-  - 1-3개월: Core MVP only
-  - 3-6개월: MVP + essential integrations
-  - 6-12개월: Full feature set
-  - 12개월 이상: Enterprise-grade with scalability
+  - 1-3 months: Core MVP only
+  - 3-6 months: MVP + essential integrations
+  - 6-12 months: Full feature set
+  - 12+ months: Enterprise-grade with scalability
 
 Each tech recommendation MUST explicitly address:
 1. Why it fits the budget
@@ -79,13 +79,13 @@ Each tech recommendation MUST explicitly address:
 Output format: JSON object with the following structure:
 {
   "prd": {
-    "title": "Product name in Korean",
-    "overview": "1-2 paragraph overview in Korean",
+    "title": "Product name",
+    "overview": "1-2 paragraph overview",
     "requirements": [
       {
         "id": "REQ-001",
         "priority": "P0|P1|P2|P3",
-        "description": "Requirement in Korean",
+        "description": "Requirement description",
         "acceptanceCriteria": ["Criterion 1", "Criterion 2"]
       }
     ],
@@ -110,26 +110,26 @@ Output format: JSON object with the following structure:
   "roadmap": {
     "phases": [
       {
-        "name": "Phase name in Korean",
-        "duration": "e.g., 4주",
+        "name": "Phase name",
+        "duration": "e.g., 4 weeks",
         "milestones": ["Milestone 1", "Milestone 2"],
         "deliverables": ["Deliverable 1", "Deliverable 2"],
         "dependencies": ["Dependency 1"]
       }
     ],
-    "totalDuration": "e.g., 3개월"
+    "totalDuration": "e.g., 3 months"
   },
   "techStack": [
     {
       "category": "frontend|backend|database|infrastructure|monitoring|ci_cd",
       "recommended": "Primary technology",
       "alternatives": ["Alternative 1", "Alternative 2"],
-      "rationale": "Why this choice in Korean",
-      "estimatedCost": "Monthly cost in KRW (e.g., 월 30만원)",
+      "rationale": "Why this choice",
+      "estimatedCost": "Monthly cost in KRW (e.g., 300,000 KRW/month)",
       "constraintAlignment": {
-        "budget": "How it fits budget in Korean",
-        "team": "How it fits team in Korean",
-        "timeline": "How it fits timeline in Korean"
+        "budget": "How it fits budget",
+        "team": "How it fits team",
+        "timeline": "How it fits timeline"
       }
     }
   ]
@@ -137,20 +137,20 @@ Output format: JSON object with the following structure:
 
 function formatBudgetRange(budget: UserConstraints['budget']): string {
   const displayMap: Record<string, string> = {
-    UNDER_10M: '1,000만원 미만',
-    '10M_TO_50M': '1,000만원 ~ 5,000만원',
-    '50M_TO_200M': '5,000만원 ~ 2억원',
-    OVER_200M: '2억원 이상',
+    UNDER_10M: 'Under 10M KRW',
+    '10M_TO_50M': '10M ~ 50M KRW',
+    '50M_TO_200M': '50M ~ 200M KRW',
+    OVER_200M: 'Over 200M KRW',
   };
   return displayMap[budget.range] || budget.displayText;
 }
 
 function formatTimeline(timeline: string): string {
   const displayMap: Record<string, string> = {
-    '1_TO_3_MONTHS': '1-3개월',
-    '3_TO_6_MONTHS': '3-6개월',
-    '6_TO_12_MONTHS': '6-12개월',
-    OVER_12_MONTHS: '12개월 이상',
+    '1_TO_3_MONTHS': '1-3 Months',
+    '3_TO_6_MONTHS': '3-6 Months',
+    '6_TO_12_MONTHS': '6-12 Months',
+    OVER_12_MONTHS: 'Over 12 Months',
   };
   return displayMap[timeline] || timeline;
 }
@@ -159,66 +159,66 @@ function buildUserPrompt(input: TechArchitectInput): string {
   const { constraints } = input;
   const teamLevels = [];
   if (constraints.team.composition.junior > 0)
-    teamLevels.push(`주니어 ${constraints.team.composition.junior}명`);
+    teamLevels.push(`Junior ${constraints.team.composition.junior}`);
   if (constraints.team.composition.middle > 0)
-    teamLevels.push(`미들 ${constraints.team.composition.middle}명`);
+    teamLevels.push(`Middle ${constraints.team.composition.middle}`);
   if (constraints.team.composition.senior > 0)
-    teamLevels.push(`시니어 ${constraints.team.composition.senior}명`);
+    teamLevels.push(`Senior ${constraints.team.composition.senior}`);
 
   const parts = [
-    '## 비즈니스 아이디어\n',
-    `**제목**: ${input.ideaTitle}\n`,
-    `**설명**: ${input.ideaDescription}\n`,
-    `**타겟 고객**: ${input.targetAudience}\n`,
-    `**차별점**: ${input.differentiators.join(', ')}\n`,
-    `**시장 기회**: ${input.marketOpportunity}\n\n`,
-    '## 원본 문제\n',
-    `**문제**: ${input.problemTitle}\n`,
-    `**도메인**: ${input.problemDomain}\n\n`,
-    '## 사용자 제약조건\n',
-    `**예산**: ${formatBudgetRange(constraints.budget)}`,
+    '## Business Idea\n',
+    `**Title**: ${input.ideaTitle}\n`,
+    `**Description**: ${input.ideaDescription}\n`,
+    `**Target Audience**: ${input.targetAudience}\n`,
+    `**Differentiators**: ${input.differentiators.join(', ')}\n`,
+    `**Market Opportunity**: ${input.marketOpportunity}\n\n`,
+    '## Original Problem\n',
+    `**Problem**: ${input.problemTitle}\n`,
+    `**Domain**: ${input.problemDomain}\n\n`,
+    '## User Constraints\n',
+    `**Budget**: ${formatBudgetRange(constraints.budget)}`,
     constraints.budget.specificAmount
-      ? ` (구체적: ${constraints.budget.specificAmount.toLocaleString()}원)`
+      ? ` (Specific: ${constraints.budget.specificAmount.toLocaleString()} KRW)`
       : '',
     '\n',
-    `**팀 규모**: 총 ${constraints.team.size}명 (${teamLevels.join(', ')})\n`,
-    `**목표 일정**: ${formatTimeline(constraints.timeline)}\n`,
+    `**Team Size**: Total ${constraints.team.size} (${teamLevels.join(', ')})\n`,
+    `**Target Timeline**: ${formatTimeline(constraints.timeline)}\n`,
   ];
 
   if (constraints.techPreferences) {
     if (constraints.techPreferences.languages?.length) {
       parts.push(
-        `**선호 언어**: ${constraints.techPreferences.languages.join(', ')}\n`
+        `**Preferred Languages**: ${constraints.techPreferences.languages.join(', ')}\n`
       );
     }
     if (constraints.techPreferences.frameworks?.length) {
       parts.push(
-        `**선호 프레임워크**: ${constraints.techPreferences.frameworks.join(', ')}\n`
+        `**Preferred Frameworks**: ${constraints.techPreferences.frameworks.join(', ')}\n`
       );
     }
     if (constraints.techPreferences.platforms?.length) {
       parts.push(
-        `**선호 플랫폼**: ${constraints.techPreferences.platforms.join(', ')}\n`
+        `**Preferred Platforms**: ${constraints.techPreferences.platforms.join(', ')}\n`
       );
     }
   }
 
   if (constraints.existingInfrastructure?.length) {
     parts.push(
-      `**기존 인프라**: ${constraints.existingInfrastructure.join(', ')}\n`
+      `**Existing Infrastructure**: ${constraints.existingInfrastructure.join(', ')}\n`
     );
   }
 
   if (input.ragContext) {
-    parts.push('\n---\n## 관련 시장 컨텍스트\n');
+    parts.push('\n---\n## Related Market Context\n');
     parts.push(input.ragContext);
   }
 
   parts.push('\n---\n');
   parts.push(
-    '위 비즈니스 아이디어와 제약조건을 분석하여 개발자가 바로 사용할 수 있는 기술 사양을 생성해주세요. ' +
-      '모든 기술 선택에는 제약조건(예산, 팀, 일정)에 맞는 명확한 근거를 포함해야 합니다. ' +
-      'Mermaid.js 다이어그램 코드는 flowchart TD 형식으로 작성해주세요. ' +
+    'Analyze the business idea and constraints above to generate technical specifications that developers can use immediately. ' +
+      'All technology choices MUST include clear rationale fitting the constraints (budget, team, timeline). ' +
+      'Mermaid.js diagram code should be in flowchart TD format. ' +
       'Return ONLY valid JSON in the specified format.'
   );
 
@@ -353,46 +353,46 @@ export async function generateMockSpecification(
   return {
     prd: {
       title: `${input.ideaTitle} PRD`,
-      overview: `${input.ideaDescription}\n\n이 문서는 ${input.targetAudience}를 위한 제품 요구사항을 정의합니다.`,
+      overview: `${input.ideaDescription}\n\nThis document defines the product requirements for ${input.targetAudience}.`,
       requirements: [
         {
           id: 'REQ-001',
           priority: 'P0',
-          description: '사용자 인증 시스템 구현',
+          description: 'User Authentication System',
           acceptanceCriteria: [
-            '이메일/비밀번호 로그인 지원',
-            'OAuth 소셜 로그인 지원',
+            'Email/Password login support',
+            'OAuth social login support',
           ],
         },
         {
           id: 'REQ-002',
           priority: 'P1',
-          description: '핵심 기능 구현',
-          acceptanceCriteria: ['MVP 기능 완성', '성능 요구사항 충족'],
+          description: 'Core Feature Implementation',
+          acceptanceCriteria: ['MVP features complete', 'Performance requirements met'],
         },
       ],
       userStories: [
-        '사용자로서 간편하게 서비스에 가입할 수 있다',
-        '사용자로서 핵심 기능을 사용할 수 있다',
+        'As a user, I want to easily sign up for the service',
+        'As a user, I want to use the core features',
       ],
       scope: {
-        included: ['사용자 인증', '핵심 기능', '기본 UI'],
-        excluded: ['관리자 대시보드', '다국어 지원'],
+        included: ['User Authentication', 'Core Features', 'Basic UI'],
+        excluded: ['Admin Dashboard', 'Multi-language Support'],
       },
     },
     architecture: {
       diagramCode: `flowchart TD
-    subgraph Frontend["프론트엔드"]
+    subgraph Frontend["Frontend"]
         A[Next.js App]
         B[React Components]
     end
 
-    subgraph Backend["백엔드"]
+    subgraph Backend["Backend"]
         C[API Routes]
         D[Auth Service]
     end
 
-    subgraph Database["데이터베이스"]
+    subgraph Database["Database"]
         E[(PostgreSQL)]
     end
 
@@ -402,16 +402,16 @@ export async function generateMockSpecification(
     D --> E`,
       components: [
         {
-          name: '프론트엔드',
-          description: '사용자 인터페이스 담당',
+          name: 'Frontend',
+          description: 'Handles User Interface',
           technology: 'Next.js + React',
-          responsibilities: ['UI 렌더링', '사용자 입력 처리'],
+          responsibilities: ['UI Rendering', 'User Input Processing'],
         },
         {
-          name: 'API 서버',
-          description: 'REST API 제공',
+          name: 'API Server',
+          description: 'Provides REST API',
           technology: 'Next.js API Routes',
-          responsibilities: ['비즈니스 로직', '데이터 처리'],
+          responsibilities: ['Business Logic', 'Data Processing'],
         },
       ],
       integrations: ['Supabase Auth', 'Vercel'],
@@ -419,21 +419,21 @@ export async function generateMockSpecification(
     roadmap: {
       phases: [
         {
-          name: 'Phase 1: MVP 개발',
-          duration: '4주',
-          milestones: ['프로젝트 셋업', '핵심 기능 구현'],
-          deliverables: ['동작하는 MVP'],
+          name: 'Phase 1: MVP Development',
+          duration: '4 weeks',
+          milestones: ['Project Setup', 'Core Feature Implementation'],
+          deliverables: ['Functional MVP'],
           dependencies: [],
         },
         {
-          name: 'Phase 2: 베타 테스트',
-          duration: '2주',
-          milestones: ['사용자 테스트', '피드백 수집'],
-          deliverables: ['안정화된 버전'],
-          dependencies: ['Phase 1 완료'],
+          name: 'Phase 2: Beta Testing',
+          duration: '2 weeks',
+          milestones: ['User Testing', 'Feedback Collection'],
+          deliverables: ['Stabilized Version'],
+          dependencies: ['Phase 1 Complete'],
         },
       ],
-      totalDuration: '6주',
+      totalDuration: '6 weeks',
     },
     techStack: [
       {
@@ -441,24 +441,24 @@ export async function generateMockSpecification(
         recommended: 'Next.js 14',
         alternatives: ['React + Vite', 'Remix'],
         rationale:
-          '서버 사이드 렌더링과 API 라우트를 한 프레임워크에서 처리 가능',
-        estimatedCost: '무료 (오픈소스)',
+          'Handles server-side rendering and API routes in a single framework',
+        estimatedCost: 'Free (Open Source)',
         constraintAlignment: {
-          budget: '무료 프레임워크로 예산 부담 없음',
-          team: '러닝커브가 낮아 팀 적응 용이',
-          timeline: '빠른 개발 속도 지원',
+          budget: 'No budget impact with free framework',
+          team: 'Low learning curve, easy for team adoption',
+          timeline: 'Supports rapid development',
         },
       },
       {
         category: 'database',
         recommended: 'Supabase (PostgreSQL)',
         alternatives: ['PlanetScale', 'Neon'],
-        rationale: '무료 티어 제공, 인증/실시간 기능 내장',
-        estimatedCost: '무료 ~ 월 25,000원',
+        rationale: 'Provides free tier, built-in auth/realtime features',
+        estimatedCost: 'Free ~ 25,000 KRW/month',
         constraintAlignment: {
-          budget: '무료 티어로 초기 비용 없음',
-          team: '관리형 서비스로 운영 부담 감소',
-          timeline: '빠른 셋업 가능',
+          budget: 'No initial cost with free tier',
+          team: 'Managed service reduces operational burden',
+          timeline: 'Quick setup possible',
         },
       },
     ],

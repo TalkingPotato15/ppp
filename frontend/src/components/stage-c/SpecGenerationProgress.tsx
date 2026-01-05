@@ -8,12 +8,12 @@ interface SpecGenerationProgressProps {
 }
 
 const GENERATION_STEPS = [
-  { id: 'analyzing', label: '비즈니스 아이디어 분석 중...', duration: 5000 },
-  { id: 'prd', label: 'PRD 문서 생성 중...', duration: 10000 },
-  { id: 'architecture', label: '시스템 아키텍처 설계 중...', duration: 12000 },
-  { id: 'roadmap', label: 'MVP 로드맵 수립 중...', duration: 8000 },
-  { id: 'techstack', label: '기술 스택 추천 중...', duration: 10000 },
-  { id: 'finalizing', label: '최종 검토 및 마무리 중...', duration: 5000 },
+  { id: 'analyzing', label: 'Analyzing business idea...', duration: 5000 },
+  { id: 'prd', label: 'Generating PRD document...', duration: 10000 },
+  { id: 'architecture', label: 'Designing system architecture...', duration: 12000 },
+  { id: 'roadmap', label: 'Planning MVP roadmap...', duration: 8000 },
+  { id: 'techstack', label: 'Recommending technology stack...', duration: 10000 },
+  { id: 'finalizing', label: 'Finalizing...', duration: 5000 },
 ];
 
 export function SpecGenerationProgress({ isGenerating, onComplete }: SpecGenerationProgressProps) {
@@ -92,10 +92,10 @@ export function SpecGenerationProgress({ isGenerating, onComplete }: SpecGenerat
 
         {/* Title */}
         <h3 className="text-xl font-semibold text-center text-gray-800 mb-2">
-          Tech Architect가 분석 중입니다
+          Tech Architect is analyzing
         </h3>
         <p className="text-center text-gray-500 mb-6">
-          약 45초 ~ 1분 정도 소요됩니다
+          It takes about 45 seconds to 1 minute
         </p>
 
         {/* Progress bar */}
@@ -157,8 +157,8 @@ export function SpecGenerationProgress({ isGenerating, onComplete }: SpecGenerat
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div className="text-sm text-blue-700">
-            <p className="font-medium">알고 계셨나요?</p>
-            <p className="mt-1">Tech Architect AI는 예산, 팀 구성, 일정을 종합적으로 분석하여 실현 가능한 기술 사양을 생성합니다.</p>
+            <p className="font-medium">Did you know?</p>
+            <p className="mt-1">Tech Architect AI analyzes budget, team composition, and timeline to generate feasible technical specifications.</p>
           </div>
         </div>
       </div>

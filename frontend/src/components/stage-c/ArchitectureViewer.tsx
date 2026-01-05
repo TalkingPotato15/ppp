@@ -13,7 +13,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
   if (!architecture) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-gray-500">아키텍처 데이터를 불러오는 중...</p>
+        <p className="text-gray-500">Loading architecture data...</p>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
         setDiagramError(null);
       } catch (error) {
         console.error('Failed to render Mermaid diagram:', error);
-        setDiagramError('다이어그램 렌더링에 실패했습니다.');
+        setDiagramError('Failed to render diagram.');
         setDiagramSvg(null);
       } finally {
         setIsLoading(false);
@@ -66,7 +66,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
           </svg>
-          시스템 아키텍처 다이어그램
+          System Architecture Diagram
         </h3>
 
         <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
@@ -81,7 +81,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
             <div className="p-6">
               <p className="text-red-500 text-sm mb-4">{diagramError}</p>
               <details className="text-xs">
-                <summary className="cursor-pointer text-gray-500 hover:text-gray-700">원본 코드 보기</summary>
+                <summary className="cursor-pointer text-gray-500 hover:text-gray-700">View Original Code</summary>
                 <pre className="mt-2 p-4 bg-gray-100 rounded overflow-x-auto">
                   {architecture.diagramCode}
                 </pre>
@@ -95,7 +95,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
             />
           ) : (
             <div className="p-6 text-center text-gray-500">
-              다이어그램이 없습니다.
+              No diagram available.
             </div>
           )}
         </div>
@@ -107,7 +107,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
-          컴포넌트
+          Components
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {architecture.components.map((component, index) => (
@@ -125,7 +125,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
 
               {component.responsibilities.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">책임</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Responsibilities</p>
                   <ul className="space-y-1">
                     {component.responsibilities.map((resp, i) => (
                       <li key={i} className="text-xs text-gray-600 flex items-center gap-2">
@@ -148,7 +148,7 @@ export function ArchitectureViewer({ architecture }: ArchitectureViewerProps) {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
-            외부 연동
+            Integrations
           </h3>
           <div className="flex flex-wrap gap-2">
             {architecture.integrations.map((integration, index) => (

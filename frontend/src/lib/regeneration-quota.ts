@@ -72,7 +72,7 @@ export async function initializeQuota(
       remainingCount: 0,
       usedCount: 0,
       maxCount: 3,
-      error: `쿼타 초기화 실패: ${error.message}`,
+      error: `Quota initialization failed: ${error.message}`,
     };
   }
 
@@ -113,7 +113,7 @@ export async function consumeRegenerationQuota(
       remainingCount: 0,
       usedCount: quota.used_count,
       maxCount: quota.max_count,
-      error: `재생성 횟수를 모두 사용했습니다 (${quota.used_count}/${quota.max_count})`,
+      error: `All regenerations used (${quota.used_count}/${quota.max_count})`,
     };
   }
 
@@ -136,7 +136,7 @@ export async function consumeRegenerationQuota(
       remainingCount: quota.max_count - quota.used_count,
       usedCount: quota.used_count,
       maxCount: quota.max_count,
-      error: '동시 요청이 감지되었습니다. 다시 시도해주세요.',
+      error: 'Concurrent request detected. Please try again.',
     };
   }
 
@@ -163,7 +163,7 @@ export async function consumeQuotaWithRetry(
     const result = await consumeRegenerationQuota(supabase, userId, ideaId);
 
     // Success or permanent failure (quota exhausted)
-    if (result.success || !result.error?.includes('동시 요청')) {
+    if (result.success || !result.error?.includes('Concurrent request detected')) {
       return result;
     }
 
@@ -179,7 +179,7 @@ export async function consumeQuotaWithRetry(
     remainingCount: 0,
     usedCount: 0,
     maxCount: 3,
-    error: lastError || '최대 재시도 횟수 초과',
+    error: lastError || 'Max retry attempts exceeded.',
   };
 }
 

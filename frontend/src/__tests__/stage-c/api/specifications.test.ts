@@ -33,7 +33,7 @@ jest.mock('@/lib/tech-architect-agent', () => ({
   generateTechnicalSpecification: jest.fn().mockResolvedValue({
     prd: { title: 'Test PRD', overview: 'Test overview', requirements: [], userStories: [], scope: { included: [], excluded: [] } },
     architecture: { diagramCode: '', components: [], integrations: [] },
-    roadmap: { phases: [], totalDuration: '3개월' },
+    roadmap: { phases: [], totalDuration: '3 months' },
     techStack: [],
   }),
 }));
@@ -60,7 +60,7 @@ describe('Specifications API', () => {
       // Actual implementation would need proper Next.js API route testing setup
       const requestBody = {
         constraints: {
-          budget: { range: '10M_TO_50M', displayText: '1,000만원 ~ 5,000만원' },
+          budget: { range: '10M_TO_50M', displayText: '₩10M ~ ₩50M' },
           team: { size: 3, composition: { junior: 1, middle: 1, senior: 1 } },
           timeline: '3_TO_6_MONTHS',
         },
@@ -160,7 +160,7 @@ describe('Validation API', () => {
   describe('POST /api/specifications/validate', () => {
     it('should return valid for correct constraints', async () => {
       const validConstraints = {
-        budget: { range: '10M_TO_50M', displayText: '1,000만원 ~ 5,000만원' },
+        budget: { range: '10M_TO_50M', displayText: '₩10M ~ ₩50M' },
         team: { size: 3, composition: { junior: 1, middle: 1, senior: 1 } },
         timeline: '3_TO_6_MONTHS',
       };
@@ -181,7 +181,7 @@ describe('Validation API', () => {
 
     it('should return warnings for inefficient combinations', async () => {
       const inefficientConstraints = {
-        budget: { range: 'UNDER_10M', displayText: '1,000만원 미만' },
+        budget: { range: 'UNDER_10M', displayText: 'Under ₩10M' },
         team: { size: 10, composition: { junior: 10, middle: 0, senior: 0 } },
         timeline: '1_TO_3_MONTHS',
       };

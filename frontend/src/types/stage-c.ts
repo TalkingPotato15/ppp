@@ -192,17 +192,17 @@ export interface StageCSt {
 
 // Budget display helpers
 export const BUDGET_DISPLAY: Record<BudgetRange, string> = {
-  UNDER_10M: '1,000만원 미만',
-  '10M_TO_50M': '1,000만원 ~ 5,000만원',
-  '50M_TO_200M': '5,000만원 ~ 2억원',
-  OVER_200M: '2억원 이상',
+  UNDER_10M: 'Under ₩10M',
+  '10M_TO_50M': '₩10M ~ ₩50M',
+  '50M_TO_200M': '₩50M ~ ₩200M',
+  OVER_200M: 'Over ₩200M',
 };
 
 export const TIMELINE_DISPLAY: Record<Timeline, string> = {
-  '1_TO_3_MONTHS': '1-3개월',
-  '3_TO_6_MONTHS': '3-6개월',
-  '6_TO_12_MONTHS': '6-12개월',
-  OVER_12_MONTHS: '12개월 이상',
+  '1_TO_3_MONTHS': '1-3 Months',
+  '3_TO_6_MONTHS': '3-6 Months',
+  '6_TO_12_MONTHS': '6-12 Months',
+  OVER_12_MONTHS: 'Over 12 Months',
 };
 
 export const PRIORITY_COLORS: Record<Priority, string> = {
@@ -213,10 +213,10 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 };
 
 export const TECH_CATEGORY_LABELS: Record<TechCategory, string> = {
-  frontend: '프론트엔드',
-  backend: '백엔드',
-  database: '데이터베이스',
-  infrastructure: '인프라',
-  monitoring: '모니터링',
+  frontend: 'Frontend',
+  backend: 'Backend',
+  database: 'Database',
+  infrastructure: 'Infrastructure',
+  monitoring: 'Monitoring',
   ci_cd: 'CI/CD',
 };

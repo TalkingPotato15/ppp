@@ -35,7 +35,7 @@ describe('constraint-validator', () => {
         ...getDefaultConstraints(),
         budget: {
           range: undefined as any,
-          displayText: '테스트',
+          displayText: 'test',
         },
       };
       const result = validateConstraints(constraints);
@@ -91,7 +91,7 @@ describe('constraint-validator', () => {
       const constraints: UserConstraints = {
         budget: {
           range: 'UNDER_10M',
-          displayText: '1,000만원 미만',
+          displayText: 'Under ₩10M',
         },
         team: {
           size: 5,
@@ -103,7 +103,7 @@ describe('constraint-validator', () => {
 
       expect(result.valid).toBe(true);
       if (isValidationSuccess(result)) {
-        expect(result.warnings?.some((w) => w.includes('예산'))).toBe(true);
+        expect(result.warnings?.some((w) => w.includes('budget'))).toBe(true);
       }
     });
 
@@ -111,7 +111,7 @@ describe('constraint-validator', () => {
       const constraints: UserConstraints = {
         budget: {
           range: 'OVER_200M',
-          displayText: '2억원 이상',
+          displayText: 'Over ₩200M',
         },
         team: {
           size: 2,
@@ -123,7 +123,7 @@ describe('constraint-validator', () => {
 
       expect(result.valid).toBe(true);
       if (isValidationSuccess(result)) {
-        expect(result.warnings?.some((w) => w.includes('팀 규모가 작습니다'))).toBe(true);
+        expect(result.warnings?.some((w) => w.includes('Team size is small'))).toBe(true);
       }
     });
 
@@ -131,7 +131,7 @@ describe('constraint-validator', () => {
       const constraints: UserConstraints = {
         budget: {
           range: '10M_TO_50M',
-          displayText: '1,000만원 ~ 5,000만원',
+          displayText: '₩10M ~ ₩50M',
         },
         team: {
           size: 3,
@@ -143,7 +143,7 @@ describe('constraint-validator', () => {
 
       expect(result.valid).toBe(true);
       if (isValidationSuccess(result)) {
-        expect(result.warnings?.some((w) => w.includes('주니어'))).toBe(true);
+        expect(result.warnings?.some((w) => w.includes('juniors'))).toBe(true);
       }
     });
 
@@ -151,7 +151,7 @@ describe('constraint-validator', () => {
       const constraints: UserConstraints = {
         budget: {
           range: '50M_TO_200M',
-          displayText: '5,000만원 ~ 2억원',
+          displayText: '₩50M ~ ₩200M',
         },
         team: {
           size: 8,
@@ -163,7 +163,7 @@ describe('constraint-validator', () => {
 
       expect(result.valid).toBe(true);
       if (isValidationSuccess(result)) {
-        expect(result.warnings?.some((w) => w.includes('커뮤니케이션'))).toBe(true);
+        expect(result.warnings?.some((w) => w.includes('communication'))).toBe(true);
       }
     });
 
@@ -178,7 +178,7 @@ describe('constraint-validator', () => {
 
       expect(result.valid).toBe(true);
       if (isValidationSuccess(result)) {
-        expect(result.warnings?.some((w) => w.includes('10개'))).toBe(true);
+        expect(result.warnings?.some((w) => w.includes('10'))).toBe(true);
       }
     });
   });
@@ -199,25 +199,24 @@ describe('constraint-validator', () => {
   describe('formatValidationErrors', () => {
     it('should format errors as bullet points', () => {
       const errors = [
-        { field: 'budget', message: '예산 정보가 필요합니다.' },
-        { field: 'team', message: '팀 정보가 필요합니다.' },
+        { field: 'budget', message: 'Budget information is required.' },
+        { field: 'team', message: 'Team information is required.' },
       ];
 
       const formatted = formatValidationErrors(errors);
 
-      expect(formatted).toContain('• 예산 정보가 필요합니다.');
-      expect(formatted).toContain('• 팀 정보가 필요합니다.');
+      expect(formatted).toContain('• Budget information is required.');
+      expect(formatted).toContain('• Team information is required.');
     });
   });
 
   describe('formatValidationWarnings', () => {
     it('should format warnings with emoji', () => {
-      const warnings = ['경고 1', '경고 2'];
+      const warnings = ['Warning 1', 'Warning 2'];
 
       const formatted = formatValidationWarnings(warnings);
 
-      expect(formatted).toContain('⚠️ 경고 1');
-      expect(formatted).toContain('⚠️ 경고 2');
+      expect(formatted).toContain('⚠️ Warning 1');
+      expect(formatted).toContain('⚠️ Warning 2');
     });
   });
-});

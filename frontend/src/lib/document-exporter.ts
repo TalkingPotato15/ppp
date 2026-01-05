@@ -10,11 +10,11 @@ import type {
 
 // Tech category labels for display
 const CATEGORY_LABELS: Record<string, string> = {
-  frontend: '프론트엔드',
-  backend: '백엔드',
-  database: '데이터베이스',
-  infrastructure: '인프라',
-  monitoring: '모니터링',
+  frontend: 'Frontend',
+  backend: 'Backend',
+  database: 'Database',
+  infrastructure: 'Infrastructure',
+  monitoring: 'Monitoring',
   ci_cd: 'CI/CD',
 };
 
@@ -25,21 +25,21 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function generateReadmeMarkdown(spec: TechnicalSpecification): string {
   return `# ${spec.prd.title}
 
-**버전**: v${spec.versionNumber}
-**생성일**: ${new Date(spec.createdAt).toLocaleDateString('ko-KR')}
+**Version**: v${spec.versionNumber}
+**Created**: ${new Date(spec.createdAt).toLocaleDateString()}
 
-## 문서 구성
+## Document Contents
 
-1. [PRD (제품 요구사항)](./prd.md)
-2. [시스템 아키텍처](./architecture.md)
-3. [MVP 로드맵](./roadmap.md)
-4. [기술 스택 추천](./techstack.md)
+1. [PRD (Product Requirements)](./prd.md)
+2. [System Architecture](./architecture.md)
+3. [MVP Roadmap](./roadmap.md)
+4. [Tech Stack Recommendations](./techstack.md)
 
-## 제약조건 요약
+## Constraints Summary
 
-- **예산**: ${spec.constraintsSnapshot.budget?.displayText || 'N/A'}
-- **팀 규모**: ${spec.constraintsSnapshot.team?.size || 0}명
-- **목표 일정**: ${spec.constraintsSnapshot.timeline || 'N/A'}
+- **Budget**: ${spec.constraintsSnapshot.budget?.displayText || 'N/A'}
+- **Team Size**: ${spec.constraintsSnapshot.team?.size || 0} people
+- **Timeline**: ${spec.constraintsSnapshot.timeline || 'N/A'}
 `;
 }
 
@@ -57,27 +57,27 @@ export function generatePRDMarkdown(prd: PRDDocument): string {
 
   return `# ${prd.title}
 
-## 개요
+## Overview
 
 ${prd.overview}
 
-## 요구사항
+## Requirements
 
-| ID | 우선순위 | 설명 | 수락 기준 |
+| ID | Priority | Description | Acceptance Criteria |
 |----|---------|------|----------|
 ${requirements}
 
-## 사용자 스토리
+## User Stories
 
 ${userStories}
 
-## 범위
+## Scope
 
-### 포함
+### Included
 
 ${included}
 
-### 제외
+### Excluded
 
 ${excluded}
 `;
@@ -90,9 +90,9 @@ export function generateArchitectureMarkdown(
     .map(
       (c) => `### ${c.name}
 
-- **기술**: ${c.technology}
-- **설명**: ${c.description}
-- **책임**:
+- **Technology**: ${c.technology}
+- **Description**: ${c.description}
+- **Responsibilities**:
 ${c.responsibilities.map((r) => `  - ${r}`).join('\n')}
 `
     )
@@ -100,19 +100,19 @@ ${c.responsibilities.map((r) => `  - ${r}`).join('\n')}
 
   const integrations = arch.integrations.map((i) => `- ${i}`).join('\n');
 
-  return `# 시스템 아키텍처
+  return `# System Architecture
 
-## 다이어그램
+## Diagram
 
 \`\`\`mermaid
 ${arch.diagramCode}
 \`\`\`
 
-## 컴포넌트 설명
+## Component Details
 
 ${components}
 
-## 외부 통합
+## External Integrations
 
 ${integrations}
 `;
@@ -123,21 +123,21 @@ export function generateRoadmapMarkdown(roadmap: MVPRoadmap): string {
     .map(
       (p, i) => `### ${p.name}
 
-- **기간**: ${p.duration}
-- **마일스톤**:
+- **Duration**: ${p.duration}
+- **Milestones**:
 ${p.milestones.map((m) => `  - ${m}`).join('\n')}
-- **산출물**:
+- **Deliverables**:
 ${p.deliverables.map((d) => `  - ${d}`).join('\n')}
-${p.dependencies?.length ? `- **의존성**: ${p.dependencies.join(', ')}` : ''}
+${p.dependencies?.length ? `- **Dependencies**: ${p.dependencies.join(', ')}` : ''}
 `
     )
     .join('\n');
 
-  return `# MVP 로드맵
+  return `# MVP Roadmap
 
-**총 소요 기간**: ${roadmap.totalDuration}
+**Total Duration**: ${roadmap.totalDuration}
 
-## 단계별 계획
+## Phased Plan
 
 ${phases}
 `;
@@ -150,23 +150,23 @@ export function generateTechStackMarkdown(
     .map(
       (t) => `### ${CATEGORY_LABELS[t.category] || t.category}
 
-**추천**: ${t.recommended}
+**Recommended**: ${t.recommended}
 
-**대안**: ${t.alternatives.join(', ')}
+**Alternatives**: ${t.alternatives.join(', ')}
 
-**선택 근거**: ${t.rationale}
+**Rationale**: ${t.rationale}
 
-**예상 비용**: ${t.estimatedCost}
+**Estimated Cost**: ${t.estimatedCost}
 
-**제약조건 적합성**:
-- 예산: ${t.constraintAlignment.budget}
-- 팀: ${t.constraintAlignment.team}
-- 일정: ${t.constraintAlignment.timeline}
+**Constraint Alignment**:
+- Budget: ${t.constraintAlignment.budget}
+- Team: ${t.constraintAlignment.team}
+- Timeline: ${t.constraintAlignment.timeline}
 `
     )
     .join('\n---\n\n');
 
-  return `# 기술 스택 추천
+  return `# Tech Stack Recommendations
 
 ${sections}
 `;
@@ -214,23 +214,23 @@ export async function generateSpecificationPDF(
     content: [
       // Title Page
       { text: spec.prd.title, style: 'title' },
-      { text: `버전 ${spec.versionNumber}`, style: 'subtitle' },
-      { text: `생성일: ${new Date(spec.createdAt).toLocaleDateString('ko-KR')}`, style: 'date' },
+      { text: `Version ${spec.versionNumber}`, style: 'subtitle' },
+      { text: `Created: ${new Date(spec.createdAt).toLocaleDateString()}`, style: 'date' },
       { text: '\n\n' },
 
       // PRD Section
-      { text: 'PRD (제품 요구사항)', style: 'sectionHeader' },
-      { text: '개요', style: 'subsectionHeader' },
+      { text: 'PRD (Product Requirements)', style: 'sectionHeader' },
+      { text: 'Overview', style: 'subsectionHeader' },
       { text: spec.prd.overview, style: 'body' },
       { text: '\n' },
 
-      { text: '요구사항', style: 'subsectionHeader' },
+      { text: 'Requirements', style: 'subsectionHeader' },
       {
         table: {
           headerRows: 1,
           widths: ['auto', 'auto', '*', '*'],
           body: [
-            ['ID', '우선순위', '설명', '수락 기준'],
+            ['ID', 'Priority', 'Description', 'Acceptance Criteria'],
             ...spec.prd.requirements.map((r) => [
               r.id,
               r.priority,
@@ -242,57 +242,57 @@ export async function generateSpecificationPDF(
       },
       { text: '\n' },
 
-      { text: '사용자 스토리', style: 'subsectionHeader' },
+      { text: 'User Stories', style: 'subsectionHeader' },
       {
         ul: spec.prd.userStories,
       },
       { text: '\n\n', pageBreak: 'after' },
 
       // Architecture Section
-      { text: '시스템 아키텍처', style: 'sectionHeader' },
-      { text: '컴포넌트', style: 'subsectionHeader' },
+      { text: 'System Architecture', style: 'sectionHeader' },
+      { text: 'Components', style: 'subsectionHeader' },
       ...spec.architecture.components.flatMap((c) => [
         { text: c.name, style: 'componentName' },
-        { text: `기술: ${c.technology}`, style: 'body' },
+        { text: `Technology: ${c.technology}`, style: 'body' },
         { text: c.description, style: 'body' },
-        { text: '책임:', style: 'label' },
+        { text: 'Responsibilities:', style: 'label' },
         { ul: c.responsibilities },
         { text: '\n' },
       ]),
 
-      { text: '외부 연동', style: 'subsectionHeader' },
+      { text: 'External Integrations', style: 'subsectionHeader' },
       { ul: spec.architecture.integrations },
       { text: '\n', pageBreak: 'after' },
 
       // Roadmap Section
-      { text: 'MVP 로드맵', style: 'sectionHeader' },
-      { text: `총 소요 기간: ${spec.roadmap.totalDuration}`, style: 'subtitle' },
+      { text: 'MVP Roadmap', style: 'sectionHeader' },
+      { text: `Total Duration: ${spec.roadmap.totalDuration}`, style: 'subtitle' },
       { text: '\n' },
       ...spec.roadmap.phases.flatMap((p, i) => [
         { text: `Phase ${i + 1}: ${p.name}`, style: 'phaseHeader' },
-        { text: `기간: ${p.duration}`, style: 'body' },
-        { text: '마일스톤:', style: 'label' },
+        { text: `Duration: ${p.duration}`, style: 'body' },
+        { text: 'Milestones:', style: 'label' },
         { ul: p.milestones },
-        { text: '산출물:', style: 'label' },
+        { text: 'Deliverables:', style: 'label' },
         { ul: p.deliverables },
         { text: '\n' },
       ]),
       { text: '\n', pageBreak: 'after' },
 
       // Tech Stack Section
-      { text: '기술 스택 추천', style: 'sectionHeader' },
+      { text: 'Tech Stack Recommendations', style: 'sectionHeader' },
       ...spec.techStack.flatMap((t) => [
         { text: `${CATEGORY_LABELS[t.category] || t.category}: ${t.recommended}`, style: 'techName' },
-        { text: `대안: ${t.alternatives.join(', ')}`, style: 'body' },
+        { text: `Alternatives: ${t.alternatives.join(', ')}`, style: 'body' },
         { text: t.rationale, style: 'body' },
-        { text: `예상 비용: ${t.estimatedCost}`, style: 'body' },
+        { text: `Estimated Cost: ${t.estimatedCost}`, style: 'body' },
         {
           table: {
             widths: ['auto', '*'],
             body: [
-              ['예산', t.constraintAlignment.budget],
-              ['팀', t.constraintAlignment.team],
-              ['일정', t.constraintAlignment.timeline],
+              ['Budget', t.constraintAlignment.budget],
+              ['Team', t.constraintAlignment.team],
+              ['Timeline', t.constraintAlignment.timeline],
             ],
           },
           layout: 'lightHorizontalLines',
@@ -351,7 +351,7 @@ export async function generateSpecificationZIP(
 
   // Generate and download the zip file
   const blob = await zip.generateAsync({ type: 'blob' });
-  const fileName = `${spec.prd.title.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_v${version}.zip`;
+  const fileName = `${spec.prd.title.replace(/[^a-zA-Z0-9]/g, '_')}_v${version}.zip`;
   saveAs(blob, fileName);
 }
 
@@ -363,6 +363,6 @@ export async function downloadSpecificationPDF(
 ): Promise<void> {
   const { saveAs } = await import('file-saver');
   const blob = await generateSpecificationPDF(spec);
-  const fileName = `${spec.prd.title.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_v${spec.versionNumber}.pdf`;
+  const fileName = `${spec.prd.title.replace(/[^a-zA-Z0-9]/g, '_')}_v${spec.versionNumber}.pdf`;
   saveAs(blob, fileName);
 }

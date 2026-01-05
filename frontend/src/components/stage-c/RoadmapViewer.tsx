@@ -10,7 +10,7 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
   if (!roadmap) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-gray-500">로드맵 데이터를 불러오는 중...</p>
+        <p className="text-gray-500">Loading roadmap data...</p>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <div>
-            <p className="text-blue-100 text-sm">전체 예상 기간</p>
+            <p className="text-blue-100 text-sm">Total Estimated Duration</p>
             <p className="text-2xl font-bold">{roadmap.totalDuration}</p>
           </div>
         </div>
@@ -32,7 +32,7 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
 
       {/* Phases Timeline */}
       <section>
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">개발 단계</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-6">Development Phases</h3>
 
         <div className="relative">
           {/* Timeline line */}
@@ -64,7 +64,7 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
                   {/* Milestones */}
                   {phase.milestones.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">마일스톤</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Milestones</p>
                       <div className="flex flex-wrap gap-2">
                         {phase.milestones.map((milestone, i) => (
                           <span
@@ -84,7 +84,7 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
                   {/* Deliverables */}
                   {phase.deliverables.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">산출물</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Deliverables</p>
                       <ul className="space-y-1">
                         {phase.deliverables.map((deliverable, i) => (
                           <li key={i} className="text-sm text-gray-700 flex items-center gap-2">
@@ -101,7 +101,7 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
                   {/* Dependencies */}
                   {phase.dependencies && phase.dependencies.length > 0 && (
                     <div>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">선행 조건</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Prerequisites</p>
                       <div className="flex flex-wrap gap-2">
                         {phase.dependencies.map((dep, i) => (
                           <span
@@ -125,19 +125,19 @@ export function RoadmapViewer({ roadmap }: RoadmapViewerProps) {
       <section className="grid grid-cols-3 gap-4">
         <div className="bg-gray-50 rounded-lg p-4 text-center">
           <p className="text-2xl font-bold text-gray-900">{roadmap.phases.length}</p>
-          <p className="text-sm text-gray-500">단계</p>
+          <p className="text-sm text-gray-500">Phases</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-4 text-center">
           <p className="text-2xl font-bold text-gray-900">
             {roadmap.phases.reduce((sum, p) => sum + p.milestones.length, 0)}
           </p>
-          <p className="text-sm text-gray-500">마일스톤</p>
+          <p className="text-sm text-gray-500">Milestones</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-4 text-center">
           <p className="text-2xl font-bold text-gray-900">
             {roadmap.phases.reduce((sum, p) => sum + p.deliverables.length, 0)}
           </p>
-          <p className="text-sm text-gray-500">산출물</p>
+          <p className="text-sm text-gray-500">Deliverables</p>
         </div>
       </section>
     </div>

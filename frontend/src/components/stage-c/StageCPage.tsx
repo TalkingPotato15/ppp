@@ -141,7 +141,7 @@ export function StageCPage({
             )}
 
             <h3 className="text-xl font-bold text-gray-900 mb-6">
-              기술 사양 조건을 입력해주세요
+              Please enter the technical specification requirements
             </h3>
 
             <ConstraintsForm
@@ -162,7 +162,7 @@ export function StageCPage({
         if (!state.specification) {
           return (
             <div className="text-center py-12">
-              <p className="text-gray-500">사양서를 찾을 수 없습니다.</p>
+              <p className="text-gray-500">Specification not found.</p>
             </div>
           );
         }
@@ -185,7 +185,7 @@ export function StageCPage({
                   />
                 </div>
                 <p className="text-gray-500 text-sm">
-                  생성일: {new Date(state.specification.createdAt).toLocaleDateString('ko-KR')}
+                  Created: {new Date(state.specification.createdAt).toLocaleDateString()}
                 </p>
               </div>
 
@@ -203,7 +203,7 @@ export function StageCPage({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  히스토리
+                  History
                   <span className="px-1.5 py-0.5 bg-gray-200 rounded text-xs">
                     {state.specifications.length}
                   </span>
@@ -231,7 +231,7 @@ export function StageCPage({
                   <div className="flex items-center justify-center py-24">
                     <div className="text-center">
                       <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4" />
-                      <p className="text-gray-600">사양서를 생성 중입니다...</p>
+                      <p className="text-gray-600">Generating specification...</p>
                     </div>
                   </div>
                 ) : state.specification.status === 'failed' ? (
@@ -242,7 +242,7 @@ export function StageCPage({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </div>
-                      <p className="text-gray-600 mb-2">사양서 생성에 실패했습니다.</p>
+                      <p className="text-gray-600 mb-2">Failed to generate specification.</p>
                       <p className="text-sm text-gray-400">{state.specification.errorMessage}</p>
                     </div>
                   </div>

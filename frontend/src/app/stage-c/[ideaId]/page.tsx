@@ -22,7 +22,7 @@ export default function StageCPageRoute() {
   useEffect(() => {
     const fetchIdeaAndVerifyPayment = async () => {
       if (!ideaId) {
-        setError('아이디어 ID가 필요합니다.');
+        setError('Idea ID is required.');
         setIsLoading(false);
         return;
       }
@@ -37,11 +37,11 @@ export default function StageCPageRoute() {
             return;
           }
           if (ideaResponse.status === 404) {
-            setError('아이디어를 찾을 수 없습니다.');
+            setError('Idea not found.');
             setIsLoading(false);
             return;
           }
-          throw new Error('아이디어 정보를 불러오는데 실패했습니다.');
+          throw new Error('Failed to load idea information.');
         }
 
         const ideaData = await ideaResponse.json();
@@ -54,7 +54,7 @@ export default function StageCPageRoute() {
             // Already has specifications - payment was already verified and consumed
             setIdea({
               id: ideaId,
-              title: ideaData.title || '비즈니스 아이디어',
+              title: ideaData.title || 'Business Idea',
               description: ideaData.description || '',
             });
             setIsLoading(false);
@@ -78,11 +78,11 @@ export default function StageCPageRoute() {
 
         setIdea({
           id: ideaId,
-          title: ideaData.title || '비즈니스 아이디어',
+          title: ideaData.title || 'Business Idea',
           description: ideaData.description || '',
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        setError(err instanceof Error ? err.message : 'An error occurred.');
       } finally {
         setIsLoading(false);
       }
@@ -96,7 +96,7 @@ export default function StageCPageRoute() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4" />
-          <p className="text-gray-600">로딩 중...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -111,14 +111,14 @@ export default function StageCPageRoute() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">오류 발생</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Occurred</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             type="button"
             onClick={() => router.back()}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            돌아가기
+            Go Back
           </button>
         </div>
       </div>

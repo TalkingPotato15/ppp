@@ -53,7 +53,7 @@ export function TechStackViewer({ techStack }: TechStackViewerProps) {
   if (!techStack || techStack.length === 0) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-gray-500">기술 스택 데이터를 불러오는 중...</p>
+        <p className="text-gray-500">Loading tech stack data...</p>
       </div>
     );
   }
@@ -74,9 +74,9 @@ export function TechStackViewer({ techStack }: TechStackViewerProps) {
     <div className="space-y-6">
       {/* Summary */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
-        <h3 className="text-lg font-semibold mb-2">기술 스택 추천</h3>
+        <h3 className="text-lg font-semibold mb-2">Tech Stack Recommendations</h3>
         <p className="text-indigo-100 text-sm">
-          예산, 팀 구성, 일정을 고려하여 최적화된 기술 스택을 추천합니다.
+          We recommend an optimized tech stack considering budget, team composition, and timeline.
         </p>
         <div className="flex flex-wrap gap-3 mt-4">
           {techStack.map((tech, index) => (
@@ -123,7 +123,7 @@ export function TechStackViewer({ techStack }: TechStackViewerProps) {
                 {/* Alternatives */}
                 {tech.alternatives.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">대안</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Alternatives</p>
                     <div className="flex flex-wrap gap-2">
                       {tech.alternatives.map((alt, i) => (
                         <span
@@ -144,7 +144,7 @@ export function TechStackViewer({ techStack }: TechStackViewerProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase">예산</p>
+                      <p className="text-xs text-gray-500 uppercase">Budget</p>
                       <p className="text-sm text-gray-700">{tech.constraintAlignment.budget}</p>
                     </div>
                   </div>
@@ -153,7 +153,7 @@ export function TechStackViewer({ techStack }: TechStackViewerProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase">팀</p>
+                      <p className="text-xs text-gray-500 uppercase">Team</p>
                       <p className="text-sm text-gray-700">{tech.constraintAlignment.team}</p>
                     </div>
                   </div>
@@ -162,7 +162,7 @@ export function TechStackViewer({ techStack }: TechStackViewerProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase">일정</p>
+                      <p className="text-xs text-gray-500 uppercase">Timeline</p>
                       <p className="text-sm text-gray-700">{tech.constraintAlignment.timeline}</p>
                     </div>
                   </div>

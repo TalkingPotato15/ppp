@@ -44,13 +44,13 @@ export function TeamCompositionInput({
   return (
     <div className="space-y-4">
       <label className="block text-sm font-medium text-gray-700">
-        팀 구성 <span className="text-red-500">*</span>
+        Team Composition <span className="text-red-500">*</span>
       </label>
 
       {/* Team Size */}
       <div>
         <label className="block text-sm text-gray-600 mb-2">
-          총 팀 규모: {value.size}명
+          Total Team Size: {value.size}
         </label>
         <input
           type="range"
@@ -61,19 +61,19 @@ export function TeamCompositionInput({
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
         <div className="flex justify-between text-xs text-gray-400 mt-1">
-          <span>1명</span>
-          <span>20명</span>
+          <span>1</span>
+          <span>20</span>
         </div>
       </div>
 
       {/* Team Composition */}
       <div className="space-y-3">
-        <p className="text-sm text-gray-600">스킬 레벨별 구성</p>
+        <p className="text-sm text-gray-600">Composition by Skill Level</p>
 
         <div className="grid grid-cols-3 gap-3">
           {/* Junior */}
           <div className="p-3 border border-gray-200 rounded-lg">
-            <label className="block text-xs text-gray-500 mb-1">주니어</label>
+            <label className="block text-xs text-gray-500 mb-1">Junior</label>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -104,7 +104,7 @@ export function TeamCompositionInput({
 
           {/* Middle */}
           <div className="p-3 border border-gray-200 rounded-lg">
-            <label className="block text-xs text-gray-500 mb-1">미들</label>
+            <label className="block text-xs text-gray-500 mb-1">Middle</label>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -135,7 +135,7 @@ export function TeamCompositionInput({
 
           {/* Senior */}
           <div className="p-3 border border-gray-200 rounded-lg">
-            <label className="block text-xs text-gray-500 mb-1">시니어</label>
+            <label className="block text-xs text-gray-500 mb-1">Senior</label>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -172,11 +172,10 @@ export function TeamCompositionInput({
           }`}
         >
           {isCompositionValid ? (
-            <span>✓ 구성원 합계가 팀 규모와 일치합니다</span>
+            <span>✓ Total members match team size</span>
           ) : (
             <span>
-              구성원 합계 ({totalComposition}명)가 팀 규모 ({value.size}명)와
-              일치하지 않습니다
+              Total members ({totalComposition}) do not match team size ({value.size})
             </span>
           )}
         </div>

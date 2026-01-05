@@ -19,15 +19,15 @@ export function validateConstraints(
 
   // Budget validation
   if (!constraints.budget) {
-    errors.push({ field: 'budget', message: '예산 정보가 필요합니다.' });
+    errors.push({ field: 'budget', message: 'Budget information is required.' });
   } else {
     if (!constraints.budget.range) {
-      errors.push({ field: 'budget.range', message: '예산 범위를 선택해주세요.' });
+      errors.push({ field: 'budget.range', message: 'Please select a budget range.' });
     }
     if (!constraints.budget.displayText) {
       errors.push({
         field: 'budget.displayText',
-        message: '예산 표시 텍스트가 필요합니다.',
+        message: 'Budget display text is required.',
       });
     }
     if (
@@ -36,25 +36,25 @@ export function validateConstraints(
     ) {
       errors.push({
         field: 'budget.specificAmount',
-        message: '예산은 0 이상이어야 합니다.',
+        message: 'Budget must be greater than or equal to 0.',
       });
     }
   }
 
   // Team validation
   if (!constraints.team) {
-    errors.push({ field: 'team', message: '팀 정보가 필요합니다.' });
+    errors.push({ field: 'team', message: 'Team information is required.' });
   } else {
     if (!constraints.team.size || constraints.team.size < 1) {
       errors.push({
         field: 'team.size',
-        message: '팀 규모는 최소 1명 이상이어야 합니다.',
+        message: 'Team size must be at least 1 person.',
       });
     }
     if (!constraints.team.composition) {
       errors.push({
         field: 'team.composition',
-        message: '팀 구성 정보가 필요합니다.',
+        message: 'Team composition information is required.',
       });
     } else {
       const { junior, middle, senior } = constraints.team.composition;
@@ -62,13 +62,13 @@ export function validateConstraints(
       if (total !== constraints.team.size) {
         errors.push({
           field: 'team.composition',
-          message: `팀 구성원 합계(${total})가 팀 규모(${constraints.team.size})와 일치하지 않습니다.`,
+          message: `Total team members (${total}) do not match team size (${constraints.team.size}).`,
         });
       }
       if (junior < 0 || middle < 0 || senior < 0) {
         errors.push({
           field: 'team.composition',
-          message: '팀 구성원 수는 0 이상이어야 합니다.',
+          message: 'Number of team members must be greater than or equal to 0.',
         });
       }
     }
@@ -76,18 +76,18 @@ export function validateConstraints(
 
   // Timeline validation
   if (!constraints.timeline) {
-    errors.push({ field: 'timeline', message: '목표 일정을 선택해주세요.' });
+    errors.push({ field: 'timeline', message: 'Please select a target timeline.' });
   }
 
   // Tech preferences validation (optional)
   if (constraints.techPreferences) {
     const { languages, frameworks, platforms } = constraints.techPreferences;
     if (languages && languages.length > 10) {
-      warnings.push('선호 언어가 10개를 초과합니다. 핵심 언어만 선택을 권장합니다.');
+      warnings.push('More than 10 preferred languages selected. We recommend selecting only core languages.');
     }
     if (frameworks && frameworks.length > 10) {
       warnings.push(
-        '선호 프레임워크가 10개를 초과합니다. 핵심 프레임워크만 선택을 권장합니다.'
+        'More than 10 preferred frameworks selected. We recommend selecting only core frameworks.'
       );
     }
   }
@@ -101,7 +101,7 @@ export function validateConstraints(
       constraints.team.size > 3
     ) {
       warnings.push(
-        '낮은 예산과 짧은 일정에 팀 규모가 큽니다. 예산 또는 일정 조정을 권장합니다.'
+        'Team size is large for the low budget and short timeline. Consider adjusting budget or timeline.'
       );
     }
 
@@ -112,7 +112,7 @@ export function validateConstraints(
       constraints.team.size < 3
     ) {
       warnings.push(
-        '예산 대비 팀 규모가 작습니다. 외주 개발 또는 팀 확장을 고려해보세요.'
+        'Team size is small for the budget. Consider outsourcing or expanding the team.'
       );
     }
 
@@ -122,7 +122,7 @@ export function validateConstraints(
       constraints.team.size > 1
     ) {
       warnings.push(
-        '팀 전원이 주니어입니다. 시니어 개발자 추가를 권장합니다.'
+        'All team members are juniors. We recommend adding a senior developer.'
       );
     }
 
@@ -132,7 +132,7 @@ export function validateConstraints(
       constraints.team.size > 5
     ) {
       warnings.push(
-        '짧은 일정에 팀 규모가 큽니다. 커뮤니케이션 오버헤드로 효율이 떨어질 수 있습니다.'
+        'Team size is large for the short timeline. Efficiency may drop due to communication overhead.'
       );
     }
   }
@@ -168,7 +168,7 @@ export function getDefaultConstraints(): UserConstraints {
   return {
     budget: {
       range: '10M_TO_50M',
-      displayText: '1,000만원 ~ 5,000만원',
+      displayText: '₩10M ~ ₩50M',
     },
     team: {
       size: 3,

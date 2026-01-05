@@ -17,8 +17,8 @@ export function GenerateSpecButton({
   remainingRegenerations,
   isRegeneration = false,
 }: GenerateSpecButtonProps) {
-  const buttonText = isRegeneration ? '사양서 재생성' : '기술 사양서 생성하기';
-  const loadingText = isRegeneration ? '재생성 중...' : '생성 중...';
+  const buttonText = isRegeneration ? 'Regenerate Spec' : 'Generate Technical Spec';
+  const loadingText = isRegeneration ? 'Regenerating...' : 'Generating...';
 
   const isDisabled = disabled || isLoading || (remainingRegenerations !== undefined && remainingRegenerations <= 0 && isRegeneration);
 
@@ -80,14 +80,14 @@ export function GenerateSpecButton({
           {isRegeneration ? (
             remainingRegenerations > 0 ? (
               <>
-                재생성 가능 횟수: <span className="font-medium text-blue-600">{remainingRegenerations}회</span> 남음
+                Regenerations left: <span className="font-medium text-blue-600">{remainingRegenerations}</span>
               </>
             ) : (
-              <span className="text-red-500">재생성 횟수를 모두 사용했습니다</span>
+              <span className="text-red-500">No regenerations remaining</span>
             )
           ) : (
             <>
-              최초 생성 + <span className="font-medium">{remainingRegenerations}회</span> 재생성 포함
+              Initial generation + <span className="font-medium">{remainingRegenerations}</span> regenerations included
             </>
           )}
         </p>
