@@ -5,7 +5,6 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { requireAuth, handleAuthError } from '@/lib/auth-middleware';
 import { generateTechnicalSpecification, type TechArchitectInput } from '@/lib/tech-architect-agent';
 import { validateConstraints, isValidationSuccess } from '@/lib/constraint-validator';
-import { initializeQuota, consumeRegenerationQuota } from '@/lib/regeneration-quota';
 import type { UserConstraints, SpecStatus, TechnicalSpecification } from '@/types/stage-c';
 
 interface CreateSpecRequest {
@@ -101,36 +100,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Initialize or get quota
-    const quotaResult = await initializeQuota(supabaseAdmin, user.id, ideaId);
-    if (!quotaResult.success) {
-      return NextResponse.json(
-        { detail: quotaResult.error },
-        { status: 500 }
-      );
-    }
-
-    // Check if quota is exceeded
-    if (quotaResult.usedCount >= quotaResult.maxCount) {
-      return NextResponse.json(
-        {
-          detail: 'Regeneration quota exceeded',
-          remainingCount: 0,
-        },
-        { status: 429 }
-      );
-    }
-
-    // Consume quota
-    const consumeResult = await consumeRegenerationQuota(supabaseAdmin, user.id, ideaId);
-    if (!consumeResult.success) {
-      return NextResponse.json(
-        { detail: consumeResult.error },
-        { status: consumeResult.error?.includes('Quota exceeded') ? 429 : 500 }
-      );
-    }
-
-    // Get next version number
+    // Get next version number FIRST to determine if it's initial or regeneration
     const { data: existingSpecs } = await supabaseAdmin
       .from('technical_specifications')
       .select('version_number')
@@ -140,6 +110,72 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     const versionNumber = (existingSpecs?.[0]?.version_number || 0) + 1;
+    const isInitialGeneration = versionNumber === 1;
+
+    // Handle quota based on generation type
+    let remainingCount = 3; // Default
+
+    if (isInitialGeneration) {
+      // Initial generation - just initialize quota, don't consume
+      const { error: quotaError } = await supabaseAdmin
+        .from('regeneration_quotas')
+        .upsert({
+          user_id: user.id,
+          idea_id: ideaId,
+          used_count: 0,
+          max_count: 3,
+          version: 1,
+        }, { onConflict: 'user_id,idea_id' });
+
+      if (quotaError) {
+        console.error('Quota initialization error:', quotaError);
+      }
+      remainingCount = 3;
+    } else {
+      // Regeneration - check and consume quota
+      const { data: quota } = await supabaseAdmin
+        .from('regeneration_quotas')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('idea_id', ideaId)
+        .single();
+
+      if (!quota) {
+        return NextResponse.json(
+          { detail: 'Quota not found' },
+          { status: 500 }
+        );
+      }
+
+      if (quota.used_count >= quota.max_count) {
+        return NextResponse.json(
+          {
+            detail: 'Regeneration quota exceeded',
+            remainingCount: 0,
+          },
+          { status: 429 }
+        );
+      }
+
+      // Consume one quota
+      const { error: updateError } = await supabaseAdmin
+        .from('regeneration_quotas')
+        .update({
+          used_count: quota.used_count + 1,
+          version: quota.version + 1,
+        })
+        .eq('id', quota.id)
+        .eq('version', quota.version);
+
+      if (updateError) {
+        return NextResponse.json(
+          { detail: 'Failed to consume quota. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      remainingCount = quota.max_count - (quota.used_count + 1);
+    }
 
     // Create specification record with 'generating' status
     const { data: spec, error: specError } = await supabaseAdmin
@@ -216,7 +252,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         specification: mapDbSpecToFrontend(completedSpec),
-        remainingRegenerations: consumeResult.remainingCount,
+        remainingRegenerations: remainingCount,
       });
 
     } catch (genError) {
