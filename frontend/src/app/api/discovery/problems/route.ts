@@ -39,11 +39,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Apply sorting
+    // Apply sorting - use created_at for consistent ordering (posted_at may be null for crawled data)
     if (sortBy === 'oldest') {
-      query = query.order('posted_at', { ascending: true });
+      query = query.order('created_at', { ascending: true });
     } else {
-      query = query.order('posted_at', { ascending: false });
+      query = query.order('created_at', { ascending: false });
     }
 
     // Apply pagination
