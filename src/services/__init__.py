@@ -1,5 +1,7 @@
-"""Service modules for the business builder."""
+"""Service modules for the Data Pipeline."""
 
-from src.services.ai_agent import AIAgentService, ai_agent
+from src.services.pipeline import PipelineService
+from src.services.dedup import DedupService
+from src.services.llm_service import LLMService
 
-__all__ = ["AIAgentService", "ai_agent"]
+__all__ = ["PipelineService", "DedupService", "LLMService"]
