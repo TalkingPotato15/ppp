@@ -237,12 +237,7 @@ async def _get_existing_urls() -> set[str]:
         Set of existing URLs.
     """
     async with get_session() as session:
-        from sqlalchemy import select
-        from src.models.raw_post import RawPost
-
-        stmt = select(RawPost.source_url)
-        result = await session.execute(stmt)
-        urls = set(row[0] for row in result.fetchall())
+        urls = await rdb_store.get_raw_post_urls(session)
 
     logger.debug(f"Found {len(urls)} existing URLs in database")
     return urls

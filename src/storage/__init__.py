@@ -1,15 +1,11 @@
-"""Storage module for Data Pipeline (ChromaDB vector store)."""
+"""Storage module for Data Pipeline (ChromaDB vector store + Supabase RDB)."""
 
-from src.storage.vector_store import (
-    get_collection,
-    add_documents,
-    search_similar,
-    delete_documents,
-)
+from src.storage import rdb_store
+from src.storage import vector_store
+from src.storage.rdb_store import get_session
 
 __all__ = [
-    "get_collection",
-    "add_documents",
-    "search_similar",
-    "delete_documents",
+    "rdb_store",
+    "vector_store",
+    "get_session",
 ]

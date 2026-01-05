@@ -14,7 +14,6 @@ export default function DiscoveryPage() {
   const isDesktop = useIsDesktop();
   const {
     problems,
-    total,
     hasMore,
     isLoading,
     filters,
@@ -65,7 +64,7 @@ export default function DiscoveryPage() {
           Discover Market Problems
         </h1>
         <p className="text-gray-600">
-          Browse {total} market problems and find opportunities for AI-powered solutions.
+          Browse market problems and find opportunities for AI-powered solutions.
         </p>
       </div>
 

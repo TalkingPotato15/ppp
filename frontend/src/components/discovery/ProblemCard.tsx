@@ -30,7 +30,7 @@ export function ProblemCard({ problem, onClick }: ProblemCardProps) {
       </h3>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        {problem.keywords.slice(0, 5).map((keyword, index) => (
+        {problem.keywords.slice(0, 6).map((keyword, index) => (
           <span
             key={index}
             className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded"
