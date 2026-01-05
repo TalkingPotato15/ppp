@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     initial_load_months: int = 3
     scrape_rate_limit_seconds: float = 5.0
     incremental_interval_hours: int = 1
+    max_posts_per_collection: int = 6  # Maximum posts to collect per run
 
     # ChromaDB
     chroma_persist_directory: str = "./data/chroma"

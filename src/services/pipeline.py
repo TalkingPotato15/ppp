@@ -366,7 +366,10 @@ async def incremental_collect(hours: int = 1) -> PipelineResult:
         # Phase 1: Scrape
         scraper = ForumScraper(forum_name=settings.target_forum_name)
         try:
-            scraped_posts = await _scrape_phase(scraper, from_date, to_date, skip_urls)
+            scraped_posts = await _scrape_phase(
+                scraper, from_date, to_date, skip_urls,
+                max_posts=settings.max_posts_per_collection
+            )
             result.posts_collected = len(scraped_posts)
         finally:
             await scraper.close()
